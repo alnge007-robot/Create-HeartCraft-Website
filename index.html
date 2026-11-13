@@ -1,562 +1,694 @@
-
 <!DOCTYPE html>
 <html lang="my">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HeartCraft ❤️</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff5f7" />
+  <meta name="description" content="Create a beautiful bilingual digital postcard with photos, music, animation and a QR code." />
+  <title>HeartCraft — Digital Surprise Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+Myanmar:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <style>
+    :root {
+      --ink: #2c2030;
+      --muted: #786b78;
+      --pink: #ef6c91;
+      --pink-dark: #db4f7a;
+      --peach: #fff0e9;
+      --paper: #fffdfc;
+      --line: #f0e3e8;
+      --lavender: #f1edff;
+      --shadow: 0 18px 50px rgba(83, 37, 59, .10);
+      --radius: 24px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: radial-gradient(circle at 10% 0%, #fff0f4 0, transparent 31%), linear-gradient(180deg, #fffaf9 0%, #fff7f7 100%);
+      font-family: "DM Sans", "Noto Sans Myanmar", sans-serif;
+      min-height: 100vh;
+    }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    .hidden { display: none !important; }
+    .wrap { width: min(1120px, calc(100% - 36px)); margin: 0 auto; }
+    .topbar { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(16px); background: rgba(255,250,249,.86); border-bottom: 1px solid rgba(240,227,232,.8); }
+    .nav { height: 72px; display:flex; align-items:center; justify-content:space-between; gap: 16px; }
+    .brand { display:flex; align-items:center; gap:10px; font-size: 20px; font-weight: 800; letter-spacing: -.7px; }
+    .brand-mark { width: 38px; height: 38px; display:grid; place-items:center; border-radius: 14px; background: linear-gradient(135deg,#ff9eb7,#eb6f97); color:white; box-shadow: 0 8px 18px #ef6c9138; font-size:19px; }
+    .nav-actions { display:flex; align-items:center; gap:10px; }
+    .lang-toggle, .ghost-btn { border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:999px; padding:10px 14px; font-weight:700; }
+    .lang-toggle { min-width:82px; }
+    .btn { border:0; border-radius:999px; padding:13px 20px; font-weight:800; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
+    .btn:hover { transform:translateY(-2px); }
+    .btn-primary { color:white; background:linear-gradient(135deg,#f27d9d,#dc527e); box-shadow:0 10px 22px #e7689038; }
+    .btn-primary:hover { box-shadow:0 14px 26px #e768904b; }
+    .btn-soft { color:#b7446c; background:#ffe8ef; }
+    .btn-outline { border:1px solid var(--line); color:var(--ink); background:white; }
+    .btn-small { padding:9px 14px; font-size:13px; }
+    .hero { padding:64px 0 44px; display:grid; grid-template-columns:1.06fr .94fr; align-items:center; gap:38px; }
+    .eyebrow { display:inline-flex; gap:8px; align-items:center; background:#fff; border:1px solid var(--line); color:#bd5878; border-radius:999px; padding:8px 13px; font-size:12px; font-weight:800; letter-spacing:.3px; }
+    h1 { font-size:clamp(38px,5.3vw,64px); line-height:1.08; letter-spacing:-2.7px; margin:18px 0 18px; }
+    .gradient-text { background:linear-gradient(110deg,#df5d86,#a17ce5); -webkit-background-clip:text; background-clip:text; color:transparent; }
+    .hero-copy { max-width:560px; color:var(--muted); font-size:17px; line-height:1.8; margin:0 0 25px; }
+    .hero-buttons { display:flex; gap:11px; flex-wrap:wrap; }
+    .hero-note { display:flex; gap:8px; align-items:center; margin-top:20px; font-size:12px; color:#8d7d88; }
+    .hero-art { min-height:390px; position:relative; display:grid; place-items:center; }
+    .hero-glow { position:absolute; width:310px; height:310px; background:radial-gradient(circle,#ffd8e5 0%,#f9e6f2 48%,transparent 72%); filter:blur(5px); }
+    .postcard { width:min(340px,83%); min-height:350px; position:relative; z-index:1; border-radius:24px; padding:27px; background:linear-gradient(150deg,#fff 0%,#fff2f5 100%); box-shadow:0 28px 65px rgba(126,56,91,.19); transform:rotate(5deg); border:8px solid #fff; text-align:center; }
+    .postcard:before { content:""; position:absolute; inset:12px; border:1px dashed #f1b5c7; border-radius:15px; pointer-events:none; }
+    .postcard .big-heart { font-size:72px; margin:24px 0 9px; filter:drop-shadow(0 9px 8px #ec6b9440); animation:heartbeat 2.4s ease-in-out infinite; }
+    .postcard h3 { font-family:Georgia,serif; font-weight:500; font-size:29px; margin:8px 0; color:#a94c70; }
+    .postcard p { color:#9f7b8a; font-size:13px; line-height:1.6; }
+    .floating { position:absolute; z-index:2; border-radius:18px; padding:13px 16px; background:white; box-shadow:var(--shadow); animation:float 4s ease-in-out infinite; }
+    .float-one { left:0; top:65px; transform:rotate(-8deg); }
+    .float-two { right:0; bottom:52px; animation-delay:1s; transform:rotate(6deg); }
+    .section { padding:38px 0 58px; }
+    .section-head { display:flex; justify-content:space-between; align-items:end; gap:18px; margin-bottom:22px; }
+    .section-head h2 { margin:0 0 7px; font-size:30px; letter-spacing:-1px; }
+    .section-head p { color:var(--muted); margin:0; line-height:1.6; }
+    .template-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:15px; }
+    .template-card { padding:18px; text-align:left; border:1px solid var(--line); border-radius:21px; background:rgba(255,255,255,.82); box-shadow:0 8px 24px rgba(75,35,54,.04); transition:.2s ease; color:var(--ink); }
+    .template-card:hover { transform:translateY(-5px); box-shadow:var(--shadow); border-color:#f2b9c9; }
+    .template-emoji { width:50px; height:50px; border-radius:17px; display:grid; place-items:center; font-size:26px; background:#fff0f4; margin-bottom:14px; }
+    .template-card:nth-child(2n) .template-emoji { background:#f2efff; }
+    .template-card strong { display:block; margin-bottom:5px; }
+    .template-card small { color:var(--muted); line-height:1.5; }
+    .how-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; }
+    .how-card { padding:22px; border:1px solid var(--line); border-radius:20px; background:#fff; }
+    .how-num { width:33px; height:33px; display:grid; place-items:center; border-radius:50%; background:#ffe6ee; color:#c64c74; font-weight:800; margin-bottom:14px; }
+    .how-card h3 { margin:0 0 7px; font-size:17px; }
+    .how-card p { margin:0; color:var(--muted); font-size:14px; line-height:1.7; }
+    footer { padding:28px 0; border-top:1px solid var(--line); color:#927f8b; font-size:12px; }
+    .footer-inner { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; }
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    /* Studio */
+    .studio { padding:28px 0 70px; }
+    .studio-head { display:flex; justify-content:space-between; gap:16px; align-items:center; margin-bottom:20px; }
+    .studio-head h1 { font-size:30px; letter-spacing:-1px; margin:0 0 5px; }
+    .studio-head p { margin:0; color:var(--muted); font-size:14px; }
+    .stepbar { display:flex; gap:8px; margin-bottom:20px; }
+    .step { flex:1; padding:12px 14px; border-radius:14px; background:#fff; border:1px solid var(--line); color:#9b8992; font-size:13px; font-weight:700; }
+    .step.active { background:#fff0f4; border-color:#f3b8c9; color:#b94970; }
+    .studio-layout { display:grid; grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr); gap:20px; align-items:start; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:23px; padding:22px; box-shadow:0 9px 28px rgba(80,43,60,.045); }
+    .panel h2 { font-size:19px; margin:0 0 5px; }
+    .panel-intro { margin:0 0 19px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .field { margin-bottom:15px; }
+    .field label { display:flex; justify-content:space-between; gap:8px; font-size:13px; font-weight:800; margin-bottom:7px; }
+    .field input, .field textarea, .field select { width:100%; border:1px solid #eadde3; border-radius:13px; padding:12px 13px; background:#fffdfd; color:var(--ink); outline:none; }
+    .field input:focus, .field textarea:focus, .field select:focus { border-color:#e98aaa; box-shadow:0 0 0 3px #fce5ed; }
+    .field textarea { min-height:112px; resize:vertical; line-height:1.7; }
+    .field .hint { display:block; margin-top:6px; color:#988995; font-size:11px; }
+    .field-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .emoji-picker { display:flex; flex-wrap:wrap; gap:7px; }
+    .emoji-btn { width:38px; height:38px; border:1px solid var(--line); background:#fff; border-radius:12px; font-size:19px; }
+    .emoji-btn:hover, .emoji-btn.selected { background:#ffedf2; border-color:#ef9bb4; }
+    .upload-box { border:1.5px dashed #e8b8c8; background:#fff9fb; padding:15px; border-radius:16px; }
+    .upload-box input { border:0; padding:0; background:transparent; }
+    .photo-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-top:12px; }
+    .photo-thumb { aspect-ratio:1; position:relative; border-radius:12px; overflow:hidden; background:#faedf2; border:1px solid var(--line); }
+    .photo-thumb img { width:100%; height:100%; object-fit:cover; }
+    .photo-thumb button { position:absolute; top:4px; right:4px; border:0; border-radius:50%; width:22px; height:22px; background:#fff; color:#b33c67; font-weight:800; }
+    .theme-row { display:flex; gap:8px; flex-wrap:wrap; }
+    .theme-chip { border:1px solid var(--line); background:#fff; padding:9px 12px; border-radius:999px; font-size:12px; font-weight:700; }
+    .theme-chip.selected { border-color:#ed91ae; background:#fff0f4; color:#b6476e; }
+    .preview-sticky { position:sticky; top:92px; }
+    .preview-card { overflow:hidden; border-radius:23px; border:8px solid white; box-shadow:0 14px 40px rgba(77,35,54,.13); background:linear-gradient(145deg,#fff4f7,#fff); min-height:420px; position:relative; }
+    .preview-top { min-height:190px; padding:28px 22px 18px; text-align:center; background:linear-gradient(135deg,#ffe1eb,#f4eaff); position:relative; overflow:hidden; }
+    .preview-top .cover-emoji { font-size:44px; display:block; margin-bottom:10px; }
+    .preview-top h3 { margin:0 0 7px; font-family:Georgia,serif; color:#9c4b6b; font-size:27px; font-weight:500; }
+    .preview-top p { margin:0; color:#916f80; font-size:12px; }
+    .preview-body { padding:20px; text-align:center; }
+    .preview-message { color:#685663; font-size:14px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .preview-photos { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:15px 0; }
+    .preview-photos img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; }
+    .preview-footer { color:#a17f8e; font-size:12px; margin-top:15px; }
+    .panel-actions { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:18px; }
+    .status { padding:11px 13px; border-radius:12px; margin-top:12px; font-size:12px; line-height:1.6; background:#f7f4ff; color:#6e5b94; }
 
-<style>
-*{box-sizing:border-box}
-body{
- margin:0;
- font-family:Arial,"Noto Sans Myanmar",sans-serif;
- background:linear-gradient(135deg,#fff0f6,#ffe0eb);
- color:#641b3b;
-}
-header{
- background:white;padding:20px;
- text-align:center;
- box-shadow:0 3px 10px #0001;
-}
-header h1{color:#e91e63;margin:0}
-.container{max-width:850px;margin:auto;padding:20px}
-.panel{
- background:white;padding:22px;
- border-radius:18px;
- margin-bottom:20px;
- box-shadow:0 5px 20px #0001;
-}
-h2{text-align:center;color:#e91e63}
-label{display:block;font-weight:bold;margin:15px 0 7px}
-input,textarea{
- width:100%;padding:12px;
- border:1px solid #f3b6cb;
- border-radius:10px;font-size:15px;
-}
-textarea{height:110px;resize:vertical}
-button{cursor:pointer}
-.types{
- display:grid;
- grid-template-columns:repeat(3,1fr);
- gap:8px;
-}
-.type{
- padding:12px 5px;
- border:1px solid #f5b5ca;
- border-radius:10px;
- background:#fff0f5;color:#a31550;
-}
-.type.active{background:#f8bbd0;border:2px solid #e91e63}
-.emojis{display:flex;flex-wrap:wrap;gap:7px}
-.emojis button{
- padding:8px;font-size:22px;
- border:1px solid #f5b5ca;
- border-radius:9px;background:#fff0f5;
-}
-.emojis button.selected{background:#f8bbd0}
-.photos{
- display:grid;grid-template-columns:repeat(5,1fr);
- gap:7px;margin-top:10px;
-}
-.photos img{
- width:100%;aspect-ratio:1;
- object-fit:cover;border-radius:9px;
-}
-.primary{
- width:100%;padding:15px;
- background:#e91e63;color:white;
- border:0;border-radius:12px;
- font-size:17px;font-weight:bold;
- margin-top:20px;
-}
-.preview{
- text-align:center;padding:22px;
- border:2px solid #f8bbd0;
- border-radius:15px;
- background:linear-gradient(135deg,#fff0f5,#fff);
- overflow-wrap:anywhere;
-}
-.preview h3{color:#e91e63;font-size:25px}
-.preview p{white-space:pre-wrap;line-height:1.8}
-.preview img{
- width:100%;max-height:130px;
- object-fit:cover;border-radius:10px;
-}
-#previewPhotos{
- display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
-}
-#qrcode{
- display:flex;justify-content:center;
- margin:20px auto;min-height:150px;
-}
-#qrcode img,#qrcode canvas{max-width:100%;height:auto}
-.actions{text-align:center}
-.actions button{
- padding:12px;margin:5px;
- border:0;border-radius:10px;
- background:#f8bbd0;color:#641b3b;
-}
-.note{font-size:12px;line-height:1.7;color:#866b7b}
-footer{text-align:center;padding:20px}
-@media(max-width:500px){
- .types{grid-template-columns:repeat(2,1fr)}
- .container{padding:12px}
-}
-</style>
+    /* Recipient + modal */
+    .recipient-screen { min-height:calc(100vh - 72px); padding:44px 0 70px; display:grid; place-items:center; }
+    .recipient-wrap { width:min(700px,calc(100% - 30px)); text-align:center; }
+    .recipient-brand { color:#b65b7a; font-weight:800; margin-bottom:20px; }
+    .envelope { margin:0 auto; width:min(410px,100%); min-height:310px; border-radius:25px; background:linear-gradient(145deg,#ffe5ee,#f4eaff); display:grid; place-items:center; padding:30px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+    .envelope:before,.envelope:after { content:""; position:absolute; width:240px; height:240px; border-radius:35px; background:#ffffff42; transform:rotate(45deg); }
+    .envelope:before { left:-130px; bottom:-120px; }
+    .envelope:after { right:-130px; top:-120px; }
+    .envelope-inner { z-index:1; }
+    .envelope .seal { font-size:62px; animation:heartbeat 2.3s infinite; }
+    .envelope h1 { font-family:Georgia,serif; font-size:34px; letter-spacing:-.8px; margin:10px 0; color:#984b6b; }
+    .envelope p { color:#8e7080; margin:0 0 17px; }
+    .opened-letter { text-align:left; padding:26px; background:#fff; border:1px solid var(--line); border-radius:22px; box-shadow:var(--shadow); margin-top:18px; animation:rise .5s ease both; }
+    .opened-letter h2 { text-align:center; font-family:Georgia,serif; color:#a34c70; font-size:29px; font-weight:500; }
+    .opened-letter .letter-text { line-height:1.9; white-space:pre-wrap; color:#655460; }
+    .opened-gallery { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:18px 0; }
+    .opened-gallery img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:12px; }
+    .music-player { border:1px solid var(--line); border-radius:14px; padding:12px; margin:15px 0; background:#fff9fb; }
+    .music-player audio { width:100%; }
+    .modal-backdrop { position:fixed; inset:0; z-index:50; background:rgba(37,22,34,.42); display:grid; place-items:center; padding:18px; }
+    .modal { width:min(500px,100%); border-radius:24px; background:#fff; padding:24px; box-shadow:0 25px 70px #20101d44; position:relative; }
+    .modal h2 { margin:0 0 7px; font-size:22px; }
+    .modal p { color:var(--muted); font-size:13px; line-height:1.7; }
+    .modal-close { position:absolute; right:15px; top:14px; border:0; background:#f8edf1; width:32px; height:32px; border-radius:50%; font-size:18px; }
+    .share-url { display:flex; gap:8px; margin:16px 0; }
+    .share-url input { min-width:0; flex:1; padding:11px; border:1px solid var(--line); border-radius:11px; }
+    #qrcode { display:grid; place-items:center; min-height:170px; padding:12px; background:#fff; border:1px dashed #ead5df; border-radius:15px; margin:14px auto; width:190px; }
+    #qrcode img { max-width:100%; }
+    .toast { position:fixed; bottom:20px; left:50%; transform:translate(-50%,20px); background:#352431; color:white; border-radius:999px; padding:12px 17px; font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:100; }
+    .toast.show { opacity:1; transform:translate(-50%,0); }
+    .heart-float { position:fixed; z-index:0; pointer-events:none; animation:floatUp 4s linear forwards; }
+    @keyframes heartbeat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+    @keyframes float { 0%,100%{translate:0 0} 50%{translate:0 -12px} }
+    @keyframes rise { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes floatUp { from{opacity:.9;transform:translateY(0) rotate(0)} to{opacity:0;transform:translateY(-110vh) rotate(35deg)} }
+    @media (max-width:850px) {
+      .hero { grid-template-columns:1fr; padding-top:42px; gap:8px; }
+      .hero-art { min-height:360px; }
+      .template-grid { grid-template-columns:repeat(2,1fr); }
+      .studio-layout { grid-template-columns:1fr; }
+      .preview-sticky { position:static; }
+      .how-grid { grid-template-columns:1fr; }
+    }
+    @media (max-width:540px) {
+      .wrap { width:calc(100% - 24px); }
+      .nav { height:64px; }
+      .brand { font-size:18px; }
+      .brand-mark { width:34px; height:34px; }
+      .nav-actions .ghost-btn { display:none; }
+      .hero { padding:35px 0 25px; }
+      h1 { font-size:42px; letter-spacing:-1.8px; }
+      .hero-copy { font-size:15px; }
+      .hero-art { min-height:320px; }
+      .postcard { min-height:300px; }
+      .float-one { left:-2px; top:26px; }
+      .float-two { right:-2px; bottom:28px; }
+      .section-head { align-items:start; flex-direction:column; }
+      .section-head h2 { font-size:25px; }
+      .template-grid { gap:9px; }
+      .template-card { padding:13px; border-radius:17px; }
+      .template-card small { font-size:11px; }
+      .studio { padding-top:20px; }
+      .studio-head { align-items:flex-start; }
+      .studio-head h1 { font-size:25px; }
+      .panel { padding:16px; }
+      .step { padding:9px 6px; font-size:10px; text-align:center; }
+      .field-row { grid-template-columns:1fr; gap:0; }
+      .photo-grid { grid-template-columns:repeat(5,1fr); }
+      .panel-actions .btn { flex:1; }
+      .opened-letter { padding:18px; }
+      .share-url { flex-direction:column; }
+    }
+  </style>
 </head>
-
 <body>
-
-<header>
-<h1>💗 HeartCraft</h1>
-<p>Create Your Special Memories</p>
-<button onclick="toggleLanguage()" id="langBtn">English</button>
-</header>
-
-<div class="container">
-
-<div class="panel">
-
-<h2 id="heading">💌 အမှတ်တရ Card ဖန်တီးပါ</h2>
-
-<label id="typeLabel">Card အမျိုးအစား</label>
-
-<div class="types">
-<button class="type active" data-type="Love">💖 Love</button>
-<button class="type" data-type="Birthday">🎂 Birthday</button>
-<button class="type" data-type="Sorry">🥺 Sorry</button>
-<button class="type" data-type="Proposal">💍 Proposal</button>
-<button class="type" data-type="Anniversary">🌹 Anniversary</button>
-<button class="type" data-type="Miss You">🫶 Miss You</button>
-<button class="type" data-type="Thank You">💐 Thank You</button>
-<button class="type" data-type="Friendship">👯 Friendship</button>
-<button class="type" data-type="Surprise">🎁 Surprise</button>
-</div>
-
-<label id="fromLabel">ပေးပို့သူအမည်</label>
-<input id="from" maxlength="60" placeholder="Your Name">
-
-<label id="toLabel">လက်ခံသူအမည်</label>
-<input id="to" maxlength="60" placeholder="Special Person">
-
-<label id="titleLabel">ခေါင်းစဉ်</label>
-<input id="title" maxlength="100" placeholder="I Love You ❤️">
-
-<label id="messageLabel">စာသားရေးရန်</label>
-<textarea id="message" maxlength="1500"
-placeholder="Write your message..."></textarea>
-
-<label id="photoLabel">📸 ဓာတ်ပုံ ၅ ပုံအထိ</label>
-<input type="file" id="photos" accept="image/*" multiple>
-
-<div class="photos" id="photoGrid"></div>
-
-<label id="emojiLabel">🥰 Choose Emojis</label>
-
-<div class="emojis" id="emojiList">
-<button type="button">❤️</button>
-<button type="button">💖</button>
-<button type="button">😍</button>
-<button type="button">🥰</button>
-<button type="button">😘</button>
-<button type="button">💕</button>
-<button type="button">🫶</button>
-<button type="button">💋</button>
-<button type="button">🌹</button>
-<button type="button">✨</button>
-<button type="button">🦋</button>
-<button type="button">🎀</button>
-<button type="button">💌</button>
-<button type="button">🥹</button>
-<button type="button">🤍</button>
-<button type="button">🎂</button>
-<button type="button">🎉</button>
-<button type="button">🌈</button>
-</div>
-
-<button class="primary" id="createBtn">
-💝 Create My Card
-</button>
-
-<p class="note" id="privacy">
-ဓာတ်ပုံများကို လက်ရှိ Browser တွင်သာ Preview ပြသပါသည်။
-ဓာတ်ပုံများကို အခြားဖုန်းမှပါ ကြည့်နိုင်ရန် Online Storage ချိတ်ဆက်ရန် လိုအပ်ပါသည်။
-</p>
-
-</div>
-
-<div class="panel">
-
-<h2 id="previewHeading">💌 Card Preview</h2>
-
-<div class="preview">
-
-<div id="pType">LOVE CARD</div>
-
-<h3 id="pTitle">I Love You ❤️</h3>
-
-<p id="pTo">To: Someone Special</p>
-
-<p id="pMessage">Your beautiful message 💗</p>
-
-<div id="previewPhotos"></div>
-
-<h3 id="pEmoji">💖 🥰 ✨</h3>
-
-<p id="pFrom">With Love ❤️</p>
-
-</div>
-
-</div>
-
-<div class="panel">
-
-<h2 id="qrHeading">🔳 QR Code</h2>
-
-<div id="qrcode">
-<p class="note">Create your card first.</p>
-</div>
-
-<div class="actions">
-<button id="copyBtn">🔗 Copy Link</button>
-<button id="downloadBtn">⬇ Download QR</button>
-</div>
-
-<p class="note" id="qrNote">
-QR Code သည် စာသားပါဝင်သော Card Link ကို ဖွင့်ပေးသည်။
-</p>
-
-</div>
-</div>
-
-<footer>Made with ❤️ HeartCraft</footer>
-
-<script>
-"use strict";
-
-const $ = id => document.getElementById(id);
-
-let language = "my";
-let cardType = "Love";
-let selectedEmojis = ["💖","🥰","✨"];
-let photoUrls = [];
-let shareLink = "";
-
-const translations = {
- my:{
-  heading:"💌 အမှတ်တရ Card ဖန်တီးပါ",
-  fromLabel:"ပေးပို့သူအမည်",
-  toLabel:"လက်ခံသူအမည်",
-  titleLabel:"ခေါင်းစဉ်",
-  messageLabel:"စာသားရေးရန်",
-  photoLabel:"📸 ဓာတ်ပုံ ၅ ပုံအထိ",
-  emojiLabel:"🥰 သင်နှစ်သက်သော Emoji",
-  createBtn:"💝 Card ဖန်တီးမယ်",
-  previewHeading:"💌 Card Preview",
-  qrHeading:"🔳 QR Code",
-  copyBtn:"🔗 Copy Link",
-  downloadBtn:"⬇ QR Download",
-  privacy:"ဓာတ်ပုံများကို လက်ရှိ Browser တွင်သာ Preview ပြသပါသည်။ ဓာတ်ပုံများကို အခြားဖုန်းမှပါ ကြည့်နိုင်ရန် Online Storage ချိတ်ဆက်ရန် လိုအပ်ပါသည်။",
-  qrNote:"QR Code သည် စာသားပါဝင်သော Card Link ကို ဖွင့်ပေးသည်။",
-  toPrefix:"သို့ - ",
-  fromPrefix:"မေတ္တာဖြင့် - "
- },
- en:{
-  heading:"💌 Create Your Memory Card",
-  fromLabel:"Your Name",
-  toLabel:"Recipient Name",
-  titleLabel:"Card Title",
-  messageLabel:"Your Message",
-  photoLabel:"📸 Upload up to 5 Photos",
-  emojiLabel:"🥰 Choose Your Emojis",
-  createBtn:"💝 Create My Card",
-  previewHeading:"💌 Card Preview",
-  qrHeading:"🔳 QR Code",
-  copyBtn:"🔗 Copy Link",
-  downloadBtn:"⬇ Download QR",
-  privacy:"Photos are previewed only in this browser. Online photo storage is required to share photos with other devices.",
-  qrNote:"The QR code opens a link containing your card text.",
-  toPrefix:"To: ",
-  fromPrefix:"With love, "
- }
-};
-
-function updatePreview(){
-
- const t = translations[language];
-
- $("pType").textContent = cardType.toUpperCase()+" CARD";
-
- $("pTitle").textContent =
- $("title").value.trim() || "I Love You ❤️";
-
- $("pTo").textContent =
- t.toPrefix + ($("to").value.trim() || "Someone Special");
-
- $("pMessage").textContent =
- $("message").value.trim() || "💗";
-
- $("pFrom").textContent =
- t.fromPrefix + ($("from").value.trim() || "You");
-
- $("pEmoji").textContent = selectedEmojis.join(" ");
-
- const grid = $("previewPhotos");
- grid.replaceChildren();
-
- photoUrls.forEach(url=>{
-  const img = document.createElement("img");
-  img.src = url;
-  img.alt = "Memory Photo";
-  grid.appendChild(img);
- });
-}
-
-document.querySelectorAll(".type").forEach(button=>{
-
- button.addEventListener("click",()=>{
-
-  cardType = button.dataset.type;
-
-  document.querySelectorAll(".type").forEach(b=>{
-   b.classList.toggle("active",b===button);
-  });
-
-  updatePreview();
-
- });
-
-});
-
-["from","to","title","message"].forEach(id=>{
- $(id).addEventListener("input",updatePreview);
-});
-
-$("emojiList").addEventListener("click",event=>{
-
- const button = event.target.closest("button");
- if(!button) return;
-
- const emoji = button.textContent.trim();
- const index = selectedEmojis.indexOf(emoji);
-
- if(index >= 0){
-  selectedEmojis.splice(index,1);
-  button.classList.remove("selected");
- }else if(selectedEmojis.length < 10){
-  selectedEmojis.push(emoji);
-  button.classList.add("selected");
- }
-
- updatePreview();
-
-});
-
-$("photos").addEventListener("change",event=>{
-
- const files = Array.from(event.target.files || []);
-
- if(files.length > 5){
-  alert("ဓာတ်ပုံ ၅ ပုံအထိသာ ရွေးနိုင်ပါတယ်။");
-  event.target.value = "";
-  return;
- }
-
- if(files.some(file=>!file.type.startsWith("image/"))){
-  alert("ဓာတ်ပုံဖိုင်များကိုသာ ရွေးချယ်ပါ။");
-  event.target.value = "";
-  return;
- }
-
- photoUrls.forEach(url=>URL.revokeObjectURL(url));
-
- photoUrls = files.map(file=>URL.createObjectURL(file));
-
- const grid = $("photoGrid");
- grid.replaceChildren();
-
- photoUrls.forEach(url=>{
-  const img = document.createElement("img");
-  img.src = url;
-  img.alt = "Selected Photo";
-  grid.appendChild(img);
- });
-
- updatePreview();
-
-});
-
-function encodeData(data){
-
- const bytes = new TextEncoder().encode(JSON.stringify(data));
-
- let binary = "";
-
- bytes.forEach(byte=>{
-  binary += String.fromCharCode(byte);
- });
-
- return btoa(binary)
-  .replace(/\+/g,"-")
-  .replace(/\//g,"_")
-  .replace(/=+$/g,"");
-
-}
-
-function createCard(){
-
- updatePreview();
-
- const data = {
-  type:cardType,
-  from:$("from").value.trim(),
-  to:$("to").value.trim(),
-  title:$("title").value.trim(),
-  message:$("message").value.trim(),
-  emojis:selectedEmojis
- };
-
- const encoded = encodeData(data);
-
- shareLink = location.href.split("#")[0] + "#card=" + encoded;
-
- $("qrcode").replaceChildren();
-
- if(typeof QRCode === "undefined"){
-  $("qrcode").textContent =
-  "QR Library မရရှိပါ။ Internet Connection စစ်ဆေးပါ။";
-  return;
- }
-
- new QRCode($("qrcode"),{
-  text:shareLink,
-  width:180,
-  height:180,
-  colorDark:"#831843",
-  colorLight:"#ffffff",
-  correctLevel:QRCode.CorrectLevel.L
- });
-
-}
-
-async function copyLink(){
-
- if(!shareLink){
-  alert("အရင်ဆုံး Card ဖန်တီးပါ။");
-  return;
- }
-
- try{
-  await navigator.clipboard.writeText(shareLink);
-  alert("Link Copy လုပ်ပြီးပါပြီ ❤️");
- }catch(error){
-  window.prompt("Copy your link:",shareLink);
- }
-
-}
-
-function downloadQR(){
-
- const image = $("qrcode").querySelector("img");
- const canvas = $("qrcode").querySelector("canvas");
-
- if(!image && !canvas){
-  alert("အရင်ဆုံး QR Code ဖန်တီးပါ။");
-  return;
- }
-
- const link = document.createElement("a");
-
- link.href = image ? image.src : canvas.toDataURL("image/png");
- link.download = "HeartCraft-QR.png";
-
- document.body.appendChild(link);
- link.click();
- link.remove();
-
-}
-
-function toggleLanguage(){
-
- language = language === "my" ? "en" : "my";
-
- const t = translations[language];
-
- Object.keys(t).forEach(key=>{
-  if($(key)){
-   $(key).textContent = t[key];
-  }
- });
-
- $("langBtn").textContent =
- language === "my" ? "English" : "မြန်မာ";
-
- document.documentElement.lang = language;
-
- updatePreview();
-
-}
-
-function loadSharedCard(){
-
- const match = location.hash.match(/^#card=([A-Za-z0-9_-]+)$/);
-
- if(!match) return;
-
- try{
-
-  let encoded = match[1].replace(/-/g,"+").replace(/_/g,"/");
-
-  while(encoded.length % 4){
-   encoded += "=";
-  }
-
-  const binary = atob(encoded);
-
-  const bytes = Uint8Array.from(binary,c=>c.charCodeAt(0));
-
-  const data = JSON.parse(new TextDecoder().decode(bytes));
-
-  cardType = typeof data.type === "string" ? data.type : "Love";
-
-  $("from").value = data.from || "";
-  $("to").value = data.to || "";
-  $("title").value = data.title || "";
-  $("message").value = data.message || "";
-
-  selectedEmojis = Array.isArray(data.emojis)
-   ? data.emojis.filter(e=>typeof e==="string").slice(0,10)
-   : [];
-
-  document.querySelectorAll(".type").forEach(button=>{
-   button.classList.toggle("active",button.dataset.type===cardType);
-  });
-
-  document.querySelectorAll("#emojiList button").forEach(button=>{
-   button.classList.toggle(
-    "selected",
-    selectedEmojis.includes(button.textContent.trim())
-   );
-  });
-
-  updatePreview();
-
- }catch(error){
-  console.error("Unable to load card:",error);
- }
-
-}
-
-$("createBtn").addEventListener("click",createCard);
-$("copyBtn").addEventListener("click",copyLink);
-$("downloadBtn").addEventListener("click",downloadQR);
-
-loadSharedCard();
-updatePreview();
-
-</script>
+  <header class="topbar" id="topbar">
+    <div class="wrap nav">
+      <div class="brand"><span class="brand-mark">♥</span><span>HeartCraft</span></div>
+      <div class="nav-actions">
+        <button class="ghost-btn" id="homeBtn" type="button">⌂ <span data-i18n="home">ပင်မစာမျက်နှာ</span></button>
+        <button class="lang-toggle" id="langToggle" type="button">EN</button>
+        <button class="btn btn-primary btn-small" id="navCreate" type="button" data-i18n="createCard">ကတ်ဖန်တီးမယ်</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="homeView">
+    <section class="wrap hero">
+      <div>
+        <span class="eyebrow"><span>✨</span><span data-i18n="heroEyebrow">သင့်ခံစားချက်ကို အမှတ်တရလက်ဆောင်အဖြစ်</span></span>
+        <h1 data-i18n="heroTitle">နှလုံးသားထဲက စကားလေးတွေကို <span class="gradient-text">လှပတဲ့ Surprise</span> အဖြစ် ပို့လိုက်ပါ။</h1>
+        <p class="hero-copy" data-i18n="heroCopy">ဓာတ်ပုံ၊ ကိုယ်ပိုင်စာသား၊ သီချင်းနဲ့ animation တွေကို ပေါင်းစပ်ပြီး ဖုန်းကနေ ဖွင့်ကြည့်နိုင်တဲ့ Digital Postcard လေးတွေ ဖန်တီးလိုက်ပါ။</p>
+        <div class="hero-buttons">
+          <button class="btn btn-primary" id="heroCreate" type="button" data-i18n="startCreating">စတင်ဖန်တီးမယ် ✨</button>
+          <button class="btn btn-outline" id="howBtn" type="button" data-i18n="howItWorks">ဘယ်လိုအလုပ်လုပ်လဲ</button>
+        </div>
+        <div class="hero-note"><span>📱</span><span data-i18n="heroNote">ဖုန်း၊ Tablet၊ ကွန်ပျူတာ အားလုံးမှာ အသုံးပြုနိုင်သည်။</span></div>
+      </div>
+      <div class="hero-art" aria-label="Digital postcard sample">
+        <div class="hero-glow"></div>
+        <div class="floating float-one">📸 <b>5 Photos</b></div>
+        <div class="floating float-two">🎵 Music + ✨ Animation</div>
+        <div class="postcard">
+          <div class="big-heart">💌</div>
+          <h3>A little surprise</h3>
+          <p>Some memories deserve<br>their own little space. ♡</p>
+          <div style="font-size:23px;margin-top:17px">🌷 💗 🌷</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="templatesSection">
+      <div class="section-head">
+        <div><h2 data-i18n="chooseTemplate">ကိုယ်ပိုင် Postcard အမျိုးအစား ရွေးချယ်ပါ</h2><p data-i18n="chooseTemplateSub">အဆင်သင့် Design တစ်ခုကို ရွေးပြီး မိမိစိတ်ကြိုက် ပြင်ဆင်နိုင်ပါတယ်။</p></div>
+      </div>
+      <div class="template-grid" id="templateGrid">
+        <button class="template-card" data-template="birthday"><span class="template-emoji">🎂</span><strong data-i18n="birthday">မွေးနေ့ကတ်</strong><small data-i18n="birthdayDesc">Birthday wishes & celebration</small></button>
+        <button class="template-card" data-template="love"><span class="template-emoji">💗</span><strong data-i18n="love">ချစ်ခြင်းမေတ္တာကတ်</strong><small data-i18n="loveDesc">A sweet note for someone special</small></button>
+        <button class="template-card" data-template="thankyou"><span class="template-emoji">💐</span><strong data-i18n="thankyou">ကျေးဇူးတင်ကတ်</strong><small data-i18n="thankyouDesc">Say thank you in a lovely way</small></button>
+        <button class="template-card" data-template="friendship"><span class="template-emoji">🫂</span><strong data-i18n="friendship">သူငယ်ချင်းကတ်</strong><small data-i18n="friendshipDesc">Celebrate your favourite person</small></button>
+        <button class="template-card" data-template="missyou"><span class="template-emoji">🥺</span><strong data-i18n="missyou">လွမ်းနေတယ်ကတ်</strong><small data-i18n="missyouDesc">Send a little note across the miles</small></button>
+        <button class="template-card" data-template="anniversary"><span class="template-emoji">💍</span><strong data-i18n="anniversary">အမှတ်တရနေ့ကတ်</strong><small data-i18n="anniversaryDesc">Keep a special day close</small></button>
+        <button class="template-card" data-template="sorry"><span class="template-emoji">🌷</span><strong data-i18n="sorry">တောင်းပန်ကတ်</strong><small data-i18n="sorryDesc">A thoughtful apology and fresh start</small></button>
+        <button class="template-card" data-template="postcard"><span class="template-emoji">🌈</span><strong data-i18n="postcard">အထွေထွေ Postcard</strong><small data-i18n="postcardDesc">Create a card for any moment</small></button>
+      </div>
+    </section>
+
+    <section class="wrap section" id="howSection">
+      <div class="section-head"><div><h2 data-i18n="threeSteps">အဆင့်သုံးဆင့်နဲ့ အလွယ်တကူ ဖန်တီးပါ</h2><p data-i18n="threeStepsSub">အမှတ်တရလက်ဆောင်လေးတစ်ခု ဖန်တီးဖို့ အချိန်အများကြီး မလိုပါဘူး။</p></div></div>
+      <div class="how-grid">
+        <article class="how-card"><div class="how-num">1</div><h3 data-i18n="step1">ကတ်အမျိုးအစား ရွေးပါ</h3><p data-i18n="step1Desc">Birthday၊ Friendship၊ Love၊ Thank You စတဲ့ Design တွေထဲက ရွေးချယ်ပါ။</p></article>
+        <article class="how-card"><div class="how-num">2</div><h3 data-i18n="step2">ကိုယ်ပိုင်အမှတ်တရ ထည့်ပါ</h3><p data-i18n="step2Desc">စာသား၊ ဓာတ်ပုံ ၅ ပုံအထိ၊ emoji၊ သီချင်းနဲ့ animation တွေ ထည့်သွင်းပါ။</p></article>
+        <article class="how-card"><div class="how-num">3</div><h3 data-i18n="step3">Link / QR နဲ့ ပေးပို့ပါ</h3><p data-i18n="step3Desc">လက်ခံသူက ဖုန်း Browser ကနေ ဖွင့်ပြီး သင့်ရဲ့ Surprise ကို ကြည့်နိုင်ပါတယ်။</p></article>
+      </div>
+    </section>
+  </main>
+
+  <main id="studioView" class="hidden">
+    <section class="wrap studio">
+      <div class="studio-head">
+        <div><h1 data-i18n="studioTitle">သင့်ရဲ့ Postcard ကို ဖန်တီးပါ</h1><p data-i18n="studioSub">အသေးစိတ်ထည့်သွင်းပြီး ညာဘက်မှာ Live Preview ကြည့်နိုင်ပါတယ်။</p></div>
+        <button class="btn btn-outline btn-small" id="backHome" type="button">← <span data-i18n="backHome">ပြန်သွားမယ်</span></button>
+      </div>
+      <div class="stepbar">
+        <div class="step active" data-i18n="stepLabel1">၁။ အကြောင်းအရာ</div>
+        <div class="step active" data-i18n="stepLabel2">၂။ ဒီဇိုင်း</div>
+        <div class="step active" data-i18n="stepLabel3">၃။ Preview & Share</div>
+      </div>
+      <div class="studio-layout">
+        <section class="panel">
+          <h2 data-i18n="yourMessage">💌 သင့်ရဲ့စာသား</h2>
+          <p class="panel-intro" data-i18n="yourMessageSub">လက်ခံမယ့်သူအတွက် စိတ်ကြိုက် စာသားရေးသားနိုင်ပါတယ်။ မြန်မာ၊ English နှစ်မျိုးစလုံး ရပါတယ်။</p>
+          <div class="field-row">
+            <div class="field"><label for="fromName" data-i18n="fromLabel">ပေးပို့သူ</label><input id="fromName" maxlength="50" placeholder="Your name / သင့်အမည်" /></div>
+            <div class="field"><label for="toName" data-i18n="toLabel">လက်ခံသူ</label><input id="toName" maxlength="50" placeholder="Their name / လက်ခံသူအမည်" /></div>
+          </div>
+          <div class="field"><label for="cardTitle" data-i18n="titleLabel">ကတ်ခေါင်းစဉ်</label><input id="cardTitle" maxlength="80" placeholder="A little surprise for you..." /></div>
+          <div class="field"><label for="message" data-i18n="messageLabel">ကိုယ်ပိုင်စာသား</label><textarea id="message" maxlength="1500" placeholder="Write something from your heart... / ရင်ထဲက စကားလေးတွေ ရေးပါ။"></textarea><span class="hint"><span id="charCount">0</span>/1500</span></div>
+          <div class="field"><label data-i18n="emojiLabel">Emoji ထည့်ပါ</label><div class="emoji-picker" id="emojiPicker"></div></div>
+
+          <div class="field"><label for="photoInput"><span data-i18n="photosLabel">ဓာတ်ပုံများ (အများဆုံး ၅ ပုံ)</span><span id="photoCount">0/5</span></label><div class="upload-box"><input type="file" id="photoInput" accept="image/*" multiple /><span class="hint" data-i18n="photoHint">ဓာတ်ပုံတွေကို အလိုအလျောက် အရွယ်အစားလျှော့ပေးပါမယ်။</span><div class="photo-grid" id="photoGrid"></div></div></div>
+
+          <div class="field"><label for="musicInput" data-i18n="musicLabel">🎵 နောက်ခံသီချင်း</label><div class="upload-box"><input type="file" id="musicInput" accept="audio/*" /><span class="hint" id="musicHint" data-i18n="musicHint">ကိုယ်ပိုင် Audio ဖိုင်တစ်ခု ထည့်နိုင်ပါတယ်။ လက်ခံသူက Play ကိုနှိပ်မှ သီချင်းဖွင့်ပါမယ်။</span></div><button type="button" class="btn btn-soft btn-small" id="testMusic" style="margin-top:10px">▶ <span data-i18n="testMusic">သီချင်းစမ်းဖွင့်ရန်</span></button></div>
+
+          <div class="field"><label data-i18n="themeLabel">🎨 ကတ်အရောင်</label><div class="theme-row" id="themePicker"><button class="theme-chip selected" data-theme="pink">🌸 Pink</button><button class="theme-chip" data-theme="lavender">💜 Lavender</button><button class="theme-chip" data-theme="peach">🍑 Peach</button><button class="theme-chip" data-theme="mint">🌿 Mint</button><button class="theme-chip" data-theme="night">🌙 Night</button></div></div>
+          <div class="field"><label for="animationSelect" data-i18n="animationLabel">✨ Animation ပုံစံ</label><select id="animationSelect"><option value="hearts">💗 Floating hearts</option><option value="sparkles">✨ Sparkles</option><option value="petals">🌸 Falling petals</option><option value="confetti">🎉 Confetti</option><option value="none">No animation</option></select></div>
+          <div class="field"><label for="occasionDate" data-i18n="dateLabel">📅 အမှတ်တရနေ့ (မထည့်လည်းရသည်)</label><input type="date" id="occasionDate" /></div>
+          <div class="panel-actions"><button class="btn btn-outline" id="saveDraft" type="button" data-i18n="saveDraft">Draft သိမ်းမယ်</button><button class="btn btn-primary" id="publishCard" type="button" data-i18n="makeLink">Link / QR ဖန်တီးမယ် ✨</button></div>
+          <div class="status" id="cloudStatus"></div>
+        </section>
+
+        <aside class="preview-sticky">
+          <div class="panel">
+            <h2 data-i18n="livePreview">👀 Live Preview</h2><p class="panel-intro" data-i18n="livePreviewSub">လက်ခံသူဘက်မှာ မြင်ရမယ့် ကတ်ပုံစံ။</p>
+            <div class="preview-card" id="livePreview">
+              <div class="preview-top" id="previewTop"><span class="cover-emoji" id="previewEmoji">💗</span><h3 id="previewTitle">A little surprise for you</h3><p id="previewTo">For someone special</p></div>
+              <div class="preview-body"><div class="preview-message" id="previewMessage">Your message will appear here...</div><div class="preview-photos" id="previewPhotos"></div><div class="preview-footer" id="previewFrom">With love ♡</div></div>
+            </div>
+            <div class="status" data-i18n="previewTip">စာသားနဲ့ ဒီဇိုင်းကို ပြောင်းလိုက်တိုင်း Preview က အလိုအလျောက် ပြောင်းလဲပါမယ်။</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <main id="recipientView" class="hidden">
+    <section class="recipient-screen">
+      <div class="recipient-wrap">
+        <div class="recipient-brand">♥ HeartCraft</div>
+        <div class="envelope" id="envelope">
+          <div class="envelope-inner"><div class="seal" id="recipientEmoji">💌</div><h1 id="envelopeTitle">A little surprise for you</h1><p id="envelopeTo">Someone has sent you a card.</p><button class="btn btn-primary" id="openSurprise" type="button">🎁 Open your surprise</button></div>
+        </div>
+        <article class="opened-letter hidden" id="openedLetter">
+          <div id="letterEyebrow" style="text-align:center;color:#cc7391;font-size:12px;font-weight:800;letter-spacing:1px">A MESSAGE FROM THE HEART</div>
+          <h2 id="openedTitle"></h2>
+          <div class="letter-text" id="openedMessage"></div>
+          <div class="opened-gallery" id="openedGallery"></div>
+          <div class="music-player hidden" id="recipientMusic"><div id="recipientMusicTitle" style="font-weight:800;font-size:13px;margin-bottom:8px">🎵 A little song for you</div><audio id="recipientAudio" controls preload="none"></audio></div>
+          <div style="text-align:right;color:#a07889;font-size:13px;margin-top:17px" id="openedFrom"></div>
+          <div style="text-align:center;margin-top:22px"><button class="btn btn-soft btn-small" id="againAnimation" type="button">✨ Replay animation</button></div>
+        </article>
+        <p id="recipientFooter" style="color:#9b8792;font-size:12px;margin-top:22px">Made with ♥ on HeartCraft</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop hidden" id="shareModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="shareTitle">
+      <button class="modal-close" id="closeShare" type="button" aria-label="Close">×</button>
+      <h2 id="shareTitle" data-i18n="shareTitle">🎉 သင့် Postcard အဆင်သင့်ဖြစ်ပါပြီ။</h2>
+      <p id="shareDescription" data-i18n="shareDescription">အောက်ပါ Link သို့မဟုတ် QR Code ကို ပေးပို့နိုင်ပါတယ်။</p>
+      <div class="share-url"><input id="shareUrl" readonly /><button class="btn btn-primary btn-small" id="copyLink" type="button" data-i18n="copyLink">Copy Link</button></div>
+      <div id="qrcode"></div>
+      <p id="qrNote" style="text-align:center;font-size:11px"></p>
+      <div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap"><button class="btn btn-outline btn-small" id="openRecipient" type="button" data-i18n="previewCard">Preview Card</button><button class="btn btn-soft btn-small" id="downloadQR" type="button" data-i18n="downloadQR">QR ပုံ သိမ်းမယ်</button></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ------------------------------------------------------------
+    // HeartCraft starter: front-end demo + optional Supabase sharing
+    // Configure Supabase in README.md to enable cross-device cards.
+    // ------------------------------------------------------------
+    const SUPABASE_URL = "";       // Example: https://YOUR_PROJECT.supabase.co
+    const SUPABASE_ANON_KEY = "";  // Use the public anon key only. Never paste service_role here.
+    const STORAGE_BUCKET = "heartcraft-media";
+
+    const translations = {
+      my: {
+        home:"ပင်မစာမျက်နှာ", createCard:"ကတ်ဖန်တီးမယ်", heroEyebrow:"သင့်ခံစားချက်ကို အမှတ်တရလက်ဆောင်အဖြစ်",
+        heroTitle:'နှလုံးသားထဲက စကားလေးတွေကို <span class="gradient-text">လှပတဲ့ Surprise</span> အဖြစ် ပို့လိုက်ပါ။',
+        heroCopy:"ဓာတ်ပုံ၊ ကိုယ်ပိုင်စာသား၊ သီချင်းနဲ့ animation တွေကို ပေါင်းစပ်ပြီး ဖုန်းကနေ ဖွင့်ကြည့်နိုင်တဲ့ Digital Postcard လေးတွေ ဖန်တီးလိုက်ပါ။",
+        startCreating:"စတင်ဖန်တီးမယ် ✨", howItWorks:"ဘယ်လိုအလုပ်လုပ်လဲ", heroNote:"ဖုန်း၊ Tablet၊ ကွန်ပျူတာ အားလုံးမှာ အသုံးပြုနိုင်သည်။",
+        chooseTemplate:"ကိုယ်ပိုင် Postcard အမျိုးအစား ရွေးချယ်ပါ", chooseTemplateSub:"အဆင်သင့် Design တစ်ခုကို ရွေးပြီး မိမိစိတ်ကြိုက် ပြင်ဆင်နိုင်ပါတယ်။",
+        birthday:"မွေးနေ့ကတ်", birthdayDesc:"Birthday wishes & celebration", love:"ချစ်ခြင်းမေတ္တာကတ်", loveDesc:"A sweet note for someone special",
+        thankyou:"ကျေးဇူးတင်ကတ်", thankyouDesc:"Say thank you in a lovely way", friendship:"သူငယ်ချင်းကတ်", friendshipDesc:"Celebrate your favourite person",
+        missyou:"လွမ်းနေတယ်ကတ်", missyouDesc:"Send a little note across the miles", anniversary:"အမှတ်တရနေ့ကတ်", anniversaryDesc:"Keep a special day close",
+        sorry:"တောင်းပန်ကတ်", sorryDesc:"A thoughtful apology and fresh start", postcard:"အထွေထွေ Postcard", postcardDesc:"Create a card for any moment",
+        threeSteps:"အဆင့်သုံးဆင့်နဲ့ အလွယ်တကူ ဖန်တီးပါ", threeStepsSub:"အမှတ်တရလက်ဆောင်လေးတစ်ခု ဖန်တီးဖို့ အချိန်အများကြီး မလိုပါဘူး။",
+        step1:"ကတ်အမျိုးအစား ရွေးပါ", step1Desc:"Birthday၊ Friendship၊ Love၊ Thank You စတဲ့ Design တွေထဲက ရွေးချယ်ပါ။",
+        step2:"ကိုယ်ပိုင်အမှတ်တရ ထည့်ပါ", step2Desc:"စာသား၊ ဓာတ်ပုံ ၅ ပုံအထိ၊ emoji၊ သီချင်းနဲ့ animation တွေ ထည့်သွင်းပါ။",
+        step3:"Link / QR နဲ့ ပေးပို့ပါ", step3Desc:"လက်ခံသူက ဖုန်း Browser ကနေ ဖွင့်ပြီး သင့်ရဲ့ Surprise ကို ကြည့်နိုင်ပါတယ်။",
+        studioTitle:"သင့်ရဲ့ Postcard ကို ဖန်တီးပါ", studioSub:"အသေးစိတ်ထည့်သွင်းပြီး ညာဘက်မှာ Live Preview ကြည့်နိုင်ပါတယ်။", backHome:"ပြန်သွားမယ်",
+        stepLabel1:"၁။ အကြောင်းအရာ",stepLabel2:"၂။ ဒီဇိုင်း",stepLabel3:"၃။ Preview & Share",yourMessage:"💌 သင့်ရဲ့စာသား",
+        yourMessageSub:"လက်ခံမယ့်သူအတွက် စိတ်ကြိုက် စာသားရေးသားနိုင်ပါတယ်။ မြန်မာ၊ English နှစ်မျိုးစလုံး ရပါတယ်။",fromLabel:"ပေးပို့သူ",toLabel:"လက်ခံသူ",
+        titleLabel:"ကတ်ခေါင်းစဉ်",messageLabel:"ကိုယ်ပိုင်စာသား",emojiLabel:"Emoji ထည့်ပါ",photosLabel:"ဓာတ်ပုံများ (အများဆုံး ၅ ပုံ)",photoHint:"ဓာတ်ပုံတွေကို အလိုအလျောက် အရွယ်အစားလျှော့ပေးပါမယ်။",
+        musicLabel:"🎵 နောက်ခံသီချင်း",musicHint:"ကိုယ်ပိုင် Audio ဖိုင်တစ်ခု ထည့်နိုင်ပါတယ်။ လက်ခံသူက Play ကိုနှိပ်မှ သီချင်းဖွင့်ပါမယ်။",testMusic:"သီချင်းစမ်းဖွင့်ရန်",
+        themeLabel:"🎨 ကတ်အရောင်",animationLabel:"✨ Animation ပုံစံ",dateLabel:"📅 အမှတ်တရနေ့ (မထည့်လည်းရသည်)",saveDraft:"Draft သိမ်းမယ်",makeLink:"Link / QR ဖန်တီးမယ် ✨",
+        livePreview:"👀 Live Preview",livePreviewSub:"လက်ခံသူဘက်မှာ မြင်ရမယ့် ကတ်ပုံစံ။",previewTip:"စာသားနဲ့ ဒီဇိုင်းကို ပြောင်းလိုက်တိုင်း Preview က အလိုအလျောက် ပြောင်းလဲပါမယ်။",
+        shareTitle:"🎉 သင့် Postcard အဆင်သင့်ဖြစ်ပါပြီ။",shareDescription:"အောက်ပါ Link သို့မဟုတ် QR Code ကို ပေးပို့နိုင်ပါတယ်။",copyLink:"Copy Link",previewCard:"Preview Card",downloadQR:"QR ပုံ သိမ်းမယ်"
+      },
+      en: {
+        home:"Home",createCard:"Create a card",heroEyebrow:"Turn your feelings into a little keepsake",
+        heroTitle:'Send the words from your heart as a <span class="gradient-text">beautiful surprise.</span>',
+        heroCopy:"Combine photos, a personal message, music and animation to create a digital postcard that someone can open on their phone.",
+        startCreating:"Start creating ✨",howItWorks:"How it works",heroNote:"Works on phones, tablets and computers.",
+        chooseTemplate:"Choose your postcard style",chooseTemplateSub:"Pick a ready-made design and make it your own.",
+        birthday:"Birthday Card",birthdayDesc:"Birthday wishes & celebration",love:"Love Note",loveDesc:"A sweet note for someone special",
+        thankyou:"Thank You Card",thankyouDesc:"Say thank you in a lovely way",friendship:"Friendship Card",friendshipDesc:"Celebrate your favourite person",
+        missyou:"Miss You Card",missyouDesc:"Send a little note across the miles",anniversary:"Anniversary Card",anniversaryDesc:"Keep a special day close",
+        sorry:"Sorry Card",sorryDesc:"A thoughtful apology and fresh start",postcard:"Any Occasion",postcardDesc:"Create a card for any moment",
+        threeSteps:"Create a surprise in three steps",threeStepsSub:"A thoughtful digital gift is only a few steps away.",
+        step1:"Choose a card",step1Desc:"Pick a design for birthdays, friendship, love, thanks and more.",
+        step2:"Add your memories",step2Desc:"Add your message, up to five photos, emojis, music and animation.",
+        step3:"Share with a link or QR",step3Desc:"Your recipient opens the surprise in their phone browser.",
+        studioTitle:"Create your postcard",studioSub:"Add your details and see a live preview on the right.",backHome:"Back home",
+        stepLabel1:"1. Your message",stepLabel2:"2. Design",stepLabel3:"3. Preview & Share",yourMessage:"💌 Your message",
+        yourMessageSub:"Write a personal note for your recipient. Burmese and English are both supported.",fromLabel:"From",toLabel:"To",titleLabel:"Card title",messageLabel:"Personal message",
+        emojiLabel:"Add an emoji",photosLabel:"Photos (up to 5)",photoHint:"Your photos will be resized automatically.",musicLabel:"🎵 Background music",musicHint:"Add one audio file. The recipient must press Play to hear it.",testMusic:"Test music",
+        themeLabel:"🎨 Card colour",animationLabel:"✨ Animation style",dateLabel:"📅 Special date (optional)",saveDraft:"Save draft",makeLink:"Create link / QR ✨",
+        livePreview:"👀 Live preview",livePreviewSub:"This is how the card will look to the recipient.",previewTip:"The preview updates as you edit your message and design.",
+        shareTitle:"🎉 Your postcard is ready!",shareDescription:"Share the link or QR code below.",copyLink:"Copy link",previewCard:"Preview card",downloadQR:"Save QR image"
+      }
+    };
+    const templateDefaults = {
+      birthday:{emoji:"🎂",titleMy:"မွေးနေ့မှာ ပျော်ရွှင်ပါစေ 🎉",titleEn:"Happy Birthday! 🎉",messageMy:"ဒီနေ့လေးကစပြီး ပျော်ရွှင်မှုတွေနဲ့ ပြည့်စုံပါစေ။ မင်းရဲ့အိပ်မက်တိုင်း အကောင်အထည်ဖော်နိုင်ပါစေ။ 💖",messageEn:"Wishing you a day full of happiness and a year full of beautiful moments. Keep shining! 💖"},
+      love:{emoji:"💗",titleMy:"မင်းအတွက် စကားလေးတစ်ခွန်း",titleEn:"A little note for you",messageMy:"မင်းရှိနေလို့ နေ့ရက်တွေ ပိုလှပလာတယ်။ ဒီကတ်လေးက မင်းကို သတိရနေတယ်ဆိုတာ ပြောပြဖို့ပါ။ 💗",messageEn:"Life feels a little brighter with you in it. This little card is just to remind you that you're appreciated. 💗"},
+      thankyou:{emoji:"💐",titleMy:"ကျေးဇူးအများကြီးတင်ပါတယ်",titleEn:"A little thank you",messageMy:"အမြဲတမ်း ကူညီပေးပြီး အားပေးနေတဲ့အတွက် ကျေးဇူးအများကြီးတင်ပါတယ်။ မင်းရဲ့စေတနာကို တန်ဖိုးထားပါတယ်။ 💐",messageEn:"Thank you for your kindness, support and all the little things you do. They mean a lot. 💐"},
+      friendship:{emoji:"🫂",titleMy:"သူငယ်ချင်းကောင်းလေးအတွက်",titleEn:"For my favourite friend",messageMy:"ရယ်စရာတွေ၊ အမှတ်တရတွေ အတူမျှဝေပေးတဲ့အတွက် ကျေးဇူးပါ။ အမြဲတမ်း ပျော်ရွှင်ပါစေ။ 🫂",messageEn:"Thanks for all the laughs, memories and little moments. I'm glad to have a friend like you. 🫂"},
+      missyou:{emoji:"🥺",titleMy:"မင်းကို လွမ်းနေတယ်",titleEn:"Missing you a little extra",messageMy:"အဝေးမှာရှိနေပေမယ့် အမှတ်တရတွေက အမြဲနီးနီးလေးပါ။ မကြာခင် ပြန်တွေ့ကြမယ်နော်။ 🥺",messageEn:"Even when we're far apart, the memories keep us close. Sending a little hello until we meet again. 🥺"},
+      anniversary:{emoji:"💍",titleMy:"အမှတ်တရနေ့လေး",titleEn:"A day to remember",messageMy:"ဒီနေ့လေးကို ပိုပြီး အမှတ်တရဖြစ်စေချင်လို့ ဒီကတ်လေး ဖန်တီးထားတာပါ။ လှပတဲ့နေ့ရက်တွေ အများကြီး ပိုင်ဆိုင်နိုင်ပါစေ။ 💍",messageEn:"Here's to the moments we've shared and all the wonderful memories still to come. 💍"},
+      sorry:{emoji:"🌷",titleMy:"စိတ်မကောင်းပါဘူး",titleEn:"A note from me",messageMy:"ဖြစ်သွားခဲ့တဲ့အရာအတွက် စိတ်မကောင်းပါဘူး။ မင်းရဲ့ခံစားချက်ကို နားလည်ဖို့ ကြိုးစားနေပါတယ်။ 🌷",messageEn:"I'm sorry for what happened. I value your feelings and hope we can understand each other better. 🌷"},
+      postcard:{emoji:"🌈",titleMy:"မင်းအတွက် အမှတ်တရလေး",titleEn:"A little postcard for you",messageMy:"ဒီနေ့လေးမှာ မင်းကို သတိရလို့ အမှတ်တရကတ်လေး ပို့လိုက်ပါတယ်။ ပျော်ရွှင်ပါစေ။ 🌈",messageEn:"Sending a little postcard to brighten your day. Hope it brings a smile! 🌈"}
+    };
+    const emojis = ["💗","❤️","💕","💖","💝","💘","🥰","😍","😘","😊","🌷","🌹","🌸","🦋","✨","🎉","🎂","🫂","🌈","⭐","🧸","🐻","☀️","💐"];
+    const themeStyles = {
+      pink:{top:"linear-gradient(135deg,#ffe1eb,#f4eaff)",ink:"#9c4b6b",paper:"#fff"},
+      lavender:{top:"linear-gradient(135deg,#e9e1ff,#fce9f4)",ink:"#6e5b9f",paper:"#fff"},
+      peach:{top:"linear-gradient(135deg,#ffe6d9,#fff0e5)",ink:"#a55e4b",paper:"#fff"},
+      mint:{top:"linear-gradient(135deg,#dff4e9,#e8f5ff)",ink:"#447d69",paper:"#fff"},
+      night:{top:"linear-gradient(135deg,#343050,#665477)",ink:"#fff0f6",paper:"#2e293d"}
+    };
+    let lang = "my";
+    let selectedTemplate = "love";
+    let selectedTheme = "pink";
+    let photoData = [];
+    let musicDataUrl = "";
+    let musicFileName = "";
+    let currentCardUrl = "";
+    let currentCardId = "";
+    let currentRecipientPayload = null;
+    let audioContext = null;
+    let demoToneTimer = null;
+    let supabaseClient = null;
+
+    const $ = id => document.getElementById(id);
+    const isCloudReady = () => Boolean(SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase);
+    function initCloud(){
+      if (isCloudReady()) {
+        try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.warn("Supabase init failed",e); }
+      }
+      updateCloudStatus();
+    }
+    function updateCloudStatus(){
+      const el = $("cloudStatus");
+      if (!el) return;
+      el.textContent = isCloudReady() && supabaseClient
+        ? (lang === "my" ? "☁️ Cloud sharing ဖွင့်ထားသည်။ Save လုပ်ပြီး Link/QR ကို အခြားဖုန်းများတွင်လည်း ဖွင့်နိုင်ပါမည်။" : "☁️ Cloud sharing is enabled. Published links and QR codes can open on other devices.")
+        : (lang === "my" ? "🧪 Demo mode — QR/Link ကို ဒီ Browser တစ်ခုတည်းမှာပဲ စမ်းဖွင့်နိုင်ပါတယ်။ အခြားဖုန်းများအတွက် README.md ထဲက Supabase ချိတ်ဆက်မှုကို အရင်လုပ်ပါ။" : "🧪 Demo mode — this browser can preview local cards only. To share across devices, connect Supabase using the steps in README.md.");
+    }
+    function setLanguage(next){
+      lang = next;
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[lang][key]) el.innerHTML = translations[lang][key];
+      });
+      $("langToggle").textContent = lang === "my" ? "EN" : "မြန်မာ";
+      updateCloudStatus();
+      updatePreview();
+    }
+    function showView(view){
+      $("homeView").classList.toggle("hidden",view!=="home");
+      $("studioView").classList.toggle("hidden",view!=="studio");
+      $("recipientView").classList.toggle("hidden",view!=="recipient");
+      $("topbar").classList.toggle("hidden",view==="recipient");
+      window.scrollTo({top:0,behavior:"smooth"});
+    }
+    function showToast(text){
+      const t=$("toast"); t.textContent=text; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2300);
+    }
+    function startEditor(template){
+      selectedTemplate = template || "postcard";
+      const t = templateDefaults[selectedTemplate];
+      $("cardTitle").value = lang === "my" ? t.titleMy : t.titleEn;
+      $("message").value = lang === "my" ? t.messageMy : t.messageEn;
+      $("fromName").value = ""; $("toName").value = "";
+      $("occasionDate").value = "";
+      photoData = []; musicDataUrl = ""; musicFileName = "";
+      $("photoInput").value = ""; $("musicInput").value = "";
+      $("photoGrid").innerHTML = ""; $("photoCount").textContent = "0/5";
+      $("musicHint").textContent = translations[lang].musicHint;
+      $("previewEmoji").textContent = t.emoji;
+      renderEmojiPicker(); updatePreview(); showView("studio");
+    }
+    function renderEmojiPicker(){
+      $("emojiPicker").innerHTML = "";
+      emojis.forEach(emoji=>{
+        const b=document.createElement("button"); b.type="button"; b.className="emoji-btn"; b.textContent=emoji;
+        b.addEventListener("click",()=>{
+          const msg=$("message"); const start=msg.selectionStart ?? msg.value.length; const end=msg.selectionEnd ?? msg.value.length;
+          msg.value=msg.value.slice(0,start)+emoji+msg.value.slice(end); msg.focus(); msg.selectionStart=msg.selectionEnd=start+emoji.length; updatePreview();
+        });
+        $("emojiPicker").appendChild(b);
+      });
+    }
+    function safeText(str){return String(str ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+    function updatePreview(){
+      const defaults=templateDefaults[selectedTemplate]||templateDefaults.postcard;
+      const title=$("cardTitle")?.value || (lang==="my"?defaults.titleMy:defaults.titleEn);
+      const msg=$("message")?.value || (lang==="my"?"သင့်စာသားကို ဒီနေရာမှာ မြင်ရပါမယ်။":"Your message will appear here...");
+      const to=$("toName")?.value || (lang==="my"?"အထူးသူတစ်ယောက်အတွက်":"For someone special");
+      const from=$("fromName")?.value || (lang==="my"?"ချစ်ခြင်းများစွာဖြင့် ♡":"With love ♡");
+      $("previewTitle").textContent=title; $("previewMessage").textContent=msg; $("previewTo").textContent=(lang==="my"?"သို့ — ":"For — ")+to; $("previewFrom").textContent=(lang==="my"?"ပေးပို့သူ — ":"From — ")+from;
+      $("previewEmoji").textContent=defaults.emoji;
+      const ts=themeStyles[selectedTheme]; $("previewTop").style.background=ts.top; $("previewTop").querySelector("h3").style.color=ts.ink;
+      $("livePreview").style.background=selectedTheme==="night"?"#2e293d":"#fff";
+      $("previewMessage").style.color=selectedTheme==="night"?"#f6eaf1":"#685663";
+      $("previewPhotos").innerHTML="";
+      photoData.forEach(src=>{const im=document.createElement("img");im.src=src;im.alt="Postcard photo";$("previewPhotos").appendChild(im);});
+      $("charCount").textContent=$("message").value.length;
+    }
+    function renderPhotoGrid(){
+      $("photoGrid").innerHTML="";
+      photoData.forEach((src,index)=>{
+        const box=document.createElement("div");box.className="photo-thumb";
+        const im=document.createElement("img");im.src=src;im.alt="Uploaded photo "+(index+1);
+        const remove=document.createElement("button");remove.type="button";remove.textContent="×";remove.setAttribute("aria-label","Remove photo");remove.addEventListener("click",()=>{photoData.splice(index,1);renderPhotoGrid();updatePreview();});
+        box.append(im,remove);$("photoGrid").appendChild(box);
+      });
+      $("photoCount").textContent=photoData.length+"/5";
+    }
+    function fileToDataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file);});}
+    function compressImage(file){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader(); reader.onerror=reject;
+        reader.onload=()=>{const img=new Image();img.onerror=reject;img.onload=()=>{
+          const max=1100,scale=Math.min(1,max/Math.max(img.width,img.height)); const c=document.createElement("canvas"); c.width=Math.round(img.width*scale); c.height=Math.round(img.height*scale);
+          const ctx=c.getContext("2d");ctx.drawImage(img,0,0,c.width,c.height);resolve(c.toDataURL("image/jpeg",.72));
+        };img.src=reader.result;}; reader.readAsDataURL(file);
+      });
+    }
+    async function handlePhotos(files){
+      const accepted=Array.from(files).filter(f=>f.type.startsWith("image/"));
+      if(photoData.length+accepted.length>5){showToast(lang==="my"?"ဓာတ်ပုံ ၅ ပုံအထိသာ ထည့်နိုင်ပါတယ်။":"You can add up to 5 photos.");}
+      for(const file of accepted.slice(0,Math.max(0,5-photoData.length))){
+        try{photoData.push(await compressImage(file));}catch(e){showToast("Could not load one image.");}
+      }
+      renderPhotoGrid(); updatePreview();
+    }
+    function getPayload(){
+      return {
+        version:1, template:selectedTemplate, theme:selectedTheme, language:lang,
+        from:$("fromName").value.trim(), to:$("toName").value.trim(),
+        title:$("cardTitle").value.trim(), message:$("message").value.trim(),
+        photos:photoData.slice(0,5), music:musicDataUrl, musicName:musicFileName,
+        animation:$("animationSelect").value, date:$("occasionDate").value,
+        emoji:(templateDefaults[selectedTemplate]||templateDefaults.postcard).emoji,
+        createdAt:new Date().toISOString()
+      };
+    }
+    function saveDraft(){
+      try{localStorage.setItem("heartcraft-draft",JSON.stringify(getPayload()));showToast(lang==="my"?"Draft သိမ်းပြီးပါပြီ။":"Draft saved.");}
+      catch(e){showToast(lang==="my"?"သိမ်းလို့မရပါ။ ဓာတ်ပုံအရွယ်အစား လျှော့ကြည့်ပါ။":"Could not save. Try using smaller photos.");}
+    }
+    async function uploadDataUrl(dataUrl,folder,extension,mime){
+      const blob=await (await fetch(dataUrl)).blob();
+      const actualType=blob.type || mime;
+      const safeExtension=(actualType.split("/")[1] || extension).replace(/[^a-z0-9]+/gi, "").slice(0,8) || extension;
+      const name=folder+"/"+crypto.randomUUID()+"."+safeExtension;
+      const {error}=await supabaseClient.storage.from(STORAGE_BUCKET).upload(name,blob,{contentType:actualType,upsert:false});
+      if(error)throw error;
+      const {data}=supabaseClient.storage.from(STORAGE_BUCKET).getPublicUrl(name);
+      return data.publicUrl;
+    }
+    async function publish(){
+      const payload=getPayload();
+      if(!payload.title || !payload.message){showToast(lang==="my"?"ခေါင်းစဉ်နဲ့ စာသား ထည့်ပေးပါ။":"Please add a title and a message.");return;}
+      const btn=$("publishCard");btn.disabled=true;btn.textContent=lang==="my"?"ဖန်တီးနေသည်...":"Creating...";
+      try{
+        if(isCloudReady() && supabaseClient){
+          const photoUrls=[];
+          for(const p of payload.photos)photoUrls.push(await uploadDataUrl(p,"photos","jpg","image/jpeg"));
+          let musicUrl="";
+          if(payload.music)musicUrl=await uploadDataUrl(payload.music,"audio","mp3","audio/mpeg");
+          payload.photos=photoUrls;payload.music=musicUrl;
+          const {data,error}=await supabaseClient.from("cards").insert({payload}).select("id").single();
+          if(error)throw error;
+          currentCardId=data.id;
+        } else {
+          currentCardId="local-"+crypto.randomUUID();
+          const all=JSON.parse(localStorage.getItem("heartcraft-cards")||"{}");all[currentCardId]=payload;
+          localStorage.setItem("heartcraft-cards",JSON.stringify(all));
+        }
+        currentCardUrl=location.origin+location.pathname+"?card="+encodeURIComponent(currentCardId);
+        makeQr(currentCardUrl);
+        $("shareUrl").value=currentCardUrl;
+        $("qrNote").textContent=(isCloudReady()&&supabaseClient)?(lang==="my"?"Cloud Link — အခြားဖုန်းများမှလည်း ဖွင့်နိုင်ပါသည်။":"Cloud link — opens on other devices."):(lang==="my"?"Demo QR — ဒီ Browser/ဖုန်းထဲမှာသာ ဖွင့်နိုင်သည်။ Cloud sharing အတွက် Supabase ချိတ်ဆက်ပါ။":"Demo QR — opens only in this browser/device. Connect Supabase for cross-device sharing.");
+        $("shareModal").classList.remove("hidden");
+      }catch(err){console.error(err);showToast(lang==="my"?"ဖန်တီးရာတွင် အမှားရှိသည်။ Supabase setting ကို စစ်ပါ။":"Could not publish. Check your Supabase settings.");}
+      finally{btn.disabled=false;btn.textContent=translations[lang].makeLink;}
+    }
+    function makeQr(url){
+      const holder=$("qrcode");holder.innerHTML="";
+      if(window.QRCode){new QRCode(holder,{text:url,width:160,height:160,colorDark:"#2c2030",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});}
+      else holder.textContent="QR library could not load. Check your internet connection.";
+    }
+    function loadLocalCard(id){
+      try{return JSON.parse(localStorage.getItem("heartcraft-cards")||"{}")[id]||null;}catch(e){return null;}
+    }
+    async function loadRecipientCard(){
+      const id=new URLSearchParams(location.search).get("card");
+      if(!id)return false;
+      let payload=null;
+      if(id.startsWith("local-"))payload=loadLocalCard(id);
+      else if(isCloudReady()&&supabaseClient){
+        const {data,error}=await supabaseClient.from("cards").select("payload").eq("id",id).single();
+        if(!error&&data)payload=data.payload;
+      }
+      if(!payload){showView("recipient");$("envelopeTitle").textContent=lang==="my"?"ကတ်ကို ရှာမတွေ့ပါ":"Card not found";$("envelopeTo").textContent=lang==="my"?"Link သက်တမ်းမရှိတော့ပါ သို့မဟုတ် Demo ကတ်ကို အခြားဖုန်းမှ ဖွင့်နေခြင်း ဖြစ်နိုင်ပါတယ်။":"This link may be unavailable, or this demo card was opened on another device.";$("openSurprise").classList.add("hidden");return true;}
+      currentRecipientPayload=payload;renderRecipient(payload);return true;
+    }
+    function renderRecipient(p){
+      showView("recipient");
+      const recipientLang=p.language || lang;
+      $("openSurprise").textContent=recipientLang==="my"?"🎁 Surprise ကို ဖွင့်ကြည့်မယ်":"🎁 Open your surprise";
+      $("letterEyebrow").textContent=recipientLang==="my"?"နှလုံးသားထဲက စာလေးတစ်စောင်":"A MESSAGE FROM THE HEART";
+      $("recipientMusicTitle").textContent=recipientLang==="my"?"🎵 သင့်အတွက် သီချင်းလေး":"🎵 A little song for you";
+      $("againAnimation").textContent=recipientLang==="my"?"✨ Animation ပြန်ကြည့်မယ်":"✨ Replay animation";
+      $("recipientFooter").textContent=recipientLang==="my"?"♥ HeartCraft မှ ဖန်တီးပေးသည်":"Made with ♥ on HeartCraft";
+      $("recipientEmoji").textContent=p.emoji||"💌";
+      $("envelopeTitle").textContent=p.title||"A little surprise for you";
+      $("envelopeTo").textContent=p.to?(recipientLang==="my"?p.to+" အတွက် အထူးကတ်လေး":"A special card for "+p.to): (recipientLang==="my"?"သင့်အတွက် အထူးကတ်လေး":"Someone has sent you a card.");
+      $("openedTitle").textContent=p.title||"A little surprise";
+      $("openedMessage").textContent=p.message||"";
+      $("openedFrom").textContent=(recipientLang==="my"?"ချစ်ခြင်းများစွာဖြင့် — ":"With love — ")+(p.from||"Someone special");
+      $("openedGallery").innerHTML="";
+      (p.photos||[]).forEach(src=>{const im=document.createElement("img");im.src=src;im.alt="A shared memory";$("openedGallery").appendChild(im);});
+      if(p.music){$("recipientMusic").classList.remove("hidden");$("recipientAudio").src=p.music;}else{$("recipientMusic").classList.add("hidden");$("recipientAudio").removeAttribute("src");}
+      $("openedLetter").classList.add("hidden");$("envelope").classList.remove("hidden");$("openSurprise").classList.remove("hidden");
+    }
+    function spawnAnimation(kind){
+      if(!kind||kind==="none")return;
+      const symbols={hearts:["💗","💕","💖","❤️"],sparkles:["✨","⭐","💫"],petals:["🌸","🌷","🌺"],confetti:["🎉","🎊","✨"]}[kind]||["💗"];
+      for(let i=0;i<22;i++){
+        setTimeout(()=>{const s=document.createElement("span");s.className="heart-float";s.textContent=symbols[Math.floor(Math.random()*symbols.length)];s.style.left=(Math.random()*96+2)+"vw";s.style.bottom="-35px";s.style.fontSize=(18+Math.random()*19)+"px";s.style.animationDuration=(3+Math.random()*2)+"s";document.body.appendChild(s);setTimeout(()=>s.remove(),5200);},i*85);
+      }
+    }
+    function playDemoTone(){
+      try{
+        const AC=window.AudioContext||window.webkitAudioContext;if(!AC){showToast("Audio is not supported in this browser.");return;}
+        if(audioContext){audioContext.close();audioContext=null; if(demoToneTimer)clearTimeout(demoToneTimer);showToast(lang==="my"?"သီချင်းရပ်လိုက်ပါပြီ။":"Demo music stopped.");return;}
+        audioContext=new AC();const ctx=audioContext;const notes=[523.25,659.25,783.99,659.25,587.33,698.46,880,698.46];let i=0;
+        const playNote=()=>{if(!audioContext)return;const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type="sine";osc.frequency.value=notes[i%notes.length];gain.gain.setValueAtTime(.0001,ctx.currentTime);gain.gain.exponentialRampToValueAtTime(.07,ctx.currentTime+.04);gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+.36);osc.connect(gain);gain.connect(ctx.destination);osc.start();osc.stop(ctx.currentTime+.38);i++;};
+        playNote();demoToneTimer=setInterval(playNote,420);setTimeout(()=>{if(audioContext){clearInterval(demoToneTimer);audioContext.close();audioContext=null;}},7000);
+        showToast(lang==="my"?"Original demo melody ဖွင့်နေသည်။":"Playing an original demo melody.");
+      }catch(e){showToast("Could not play audio.");}
+    }
+
+    // Event wiring
+    $("langToggle").addEventListener("click",()=>setLanguage(lang==="my"?"en":"my"));
+    ["navCreate","heroCreate"].forEach(id=>$(id).addEventListener("click",()=>startEditor("postcard")));
+    $("templateGrid").addEventListener("click",e=>{const card=e.target.closest("[data-template]");if(card)startEditor(card.dataset.template);});
+    $("homeBtn").addEventListener("click",()=>{history.replaceState({},"",location.pathname);showView("home");});
+    $("backHome").addEventListener("click",()=>showView("home"));
+    $("howBtn").addEventListener("click",()=>$("howSection").scrollIntoView({behavior:"smooth"}));
+    ["fromName","toName","cardTitle","message"].forEach(id=>$(id).addEventListener("input",updatePreview));
+    $("photoInput").addEventListener("change",e=>handlePhotos(e.target.files));
+    $("musicInput").addEventListener("change",async e=>{
+      const file=e.target.files[0];if(!file)return;
+      if(!file.type.startsWith("audio/")){showToast("Please choose an audio file.");return;}
+      if(file.size>2*1024*1024){showToast(lang==="my"?"Demo အတွက် Audio ဖိုင် 2MB အောက် ရွေးပါ။":"Please choose an audio file under 2MB for this starter.");e.target.value="";return;}
+      try{musicDataUrl=await fileToDataUrl(file);musicFileName=file.name;$("musicHint").textContent="✓ "+file.name;showToast(lang==="my"?"သီချင်းထည့်ပြီးပါပြီ။":"Music added.");}catch(err){showToast("Could not load audio.");}
+    });
+    $("testMusic").addEventListener("click",()=>{if(musicDataUrl){const a=new Audio(musicDataUrl);a.play().catch(()=>showToast("Tap again to allow audio playback."));}else playDemoTone();});
+    $("themePicker").addEventListener("click",e=>{const b=e.target.closest("[data-theme]");if(!b)return;selectedTheme=b.dataset.theme;document.querySelectorAll(".theme-chip").forEach(x=>x.classList.toggle("selected",x===b));updatePreview();});
+    $("saveDraft").addEventListener("click",saveDraft);
+    $("publishCard").addEventListener("click",publish);
+    $("closeShare").addEventListener("click",()=>$("shareModal").classList.add("hidden"));
+    $("shareModal").addEventListener("click",e=>{if(e.target===$("shareModal"))$("shareModal").classList.add("hidden");});
+    $("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("shareUrl").value);showToast(lang==="my"?"Link ကို Copy ကူးပြီးပါပြီ။":"Link copied.");}catch(e){$("shareUrl").select();document.execCommand("copy");showToast("Copied");}});
+    $("openRecipient").addEventListener("click",()=>{location.href=currentCardUrl;});
+    $("downloadQR").addEventListener("click",()=>{const img=$("qrcode").querySelector("img")||$("qrcode").querySelector("canvas");if(!img){showToast("QR code is not ready.");return;}const a=document.createElement("a");a.href=img.tagName==="CANVAS"?img.toDataURL("image/png"):img.src;a.download="heartcraft-qr.png";a.click();});
+    $("openSurprise").addEventListener("click",()=>{$("envelope").classList.add("hidden");$("openedLetter").classList.remove("hidden");spawnAnimation(currentRecipientPayload?.animation||"hearts");});
+    $("againAnimation").addEventListener("click",()=>spawnAnimation(currentRecipientPayload?.animation||"hearts"));
+
+    // Restore saved draft and check whether this URL is a recipient card.
+    function restoreDraft(){
+      try{const p=JSON.parse(localStorage.getItem("heartcraft-draft")||"null");if(!p)return;
+        selectedTemplate=p.template||"postcard";selectedTheme=p.theme||"pink";$("fromName").value=p.from||"";$("toName").value=p.to||"";$("cardTitle").value=p.title||"";$("message").value=p.message||"";$("occasionDate").value=p.date||"";$("animationSelect").value=p.animation||"hearts";photoData=p.photos||[];musicDataUrl=p.music||"";musicFileName=p.musicName||"";renderPhotoGrid();updatePreview();
+      }catch(e){console.warn("Draft could not be restored",e);}
+    }
+    window.addEventListener("DOMContentLoaded",async()=>{
+      initCloud();
+      const hasCard=await loadRecipientCard();
+      if(!hasCard)restoreDraft();
+    });
+  </script>
 </body>
 </html>
