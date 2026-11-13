@@ -1,66 +1,42 @@
-# HeartCraft — GitHub Pages + Firebase (English / Myanmar)
+# HeartCraft Myanmar — Romantic Greeting Card Website
 
-A responsive greeting-card starter with an original design. This is an independently written starter and does not reuse HeartCraft's proprietary source code or artwork.
+A responsive bilingual-ready frontend starter for creating interactive greeting cards.
 
 ## Included
+- Romantic pink/luxury responsive home page
+- Birthday, Love Note, Thank You, Friendship, Miss You, Anniversary, Sorry and Any Occasion categories
+- Card editor with recipient, date, message, up to five photos, optional audio and animation selection
+- Envelope → message → cake/candle → photo gallery receiver experience
+- Floating emoji animations and browser share/copy link action
+- Supabase starter SQL schema
 
-- English / Myanmar language toggle
-- Eight card types: Birthday, Love Note, Thank You, Friendship, Miss You, Anniversary, Sorry, Any Occasion
-- Creator editor: recipient, sender, date, theme and message
-- Up to five photos and one music file
-- Receiver sequence: envelope → message → cake/candle + music → photo gallery
-- Firestore records, Firebase Storage uploads and shareable card URLs
-- Anonymous Firebase Authentication; editing is limited to the same anonymous account/browser
-- Firebase Security Rules for card ownership and media upload limits
+## Run locally
+1. Unzip the project.
+2. Open `index.html` in a browser, or run a local static server from this folder:
+   - `python -m http.server 8000`
+   - visit `http://localhost:8000`
 
-## 1. Create Firebase project
+## Important: local demo vs real online sharing
+This ZIP is a working frontend prototype. The current editor stores card data in the creator's browser `localStorage`. Therefore a link opened on another phone will NOT automatically contain the photos/music/card. Public sharing requires a backend database and file storage. The supplied `database/schema.sql` is a starting point for Supabase, but production integration is not wired yet.
 
-1. Open https://console.firebase.google.com/ and create a project.
-2. In **Project settings → General → Your apps**, add a **Web app** and copy its config.
-3. In **Build → Authentication → Sign-in method**, enable **Anonymous**.
-4. In **Build → Firestore Database**, create a database.
-5. In **Build → Storage**, create the default Storage bucket.
-6. Open `index.html` and replace the placeholder values in `firebaseConfig` with the exact Web App config values. Use the exact `storageBucket` value shown by Firebase; newer projects may use a `*.firebasestorage.app` domain.
-7. In Firestore → Rules, paste `firestore.rules` and click **Publish**.
-8. In Storage → Rules, paste `storage.rules` and click **Publish**.
-9. In Authentication → Settings → Authorized domains, add the GitHub Pages hostname, e.g. `YOUR-USERNAME.github.io`. Add `localhost` only if testing locally.
+### Supabase deployment checklist
+1. Create a free Supabase project.
+2. Run `database/schema.sql` in SQL Editor.
+3. Create a Storage bucket for card-media.
+4. Add a server-side or authenticated create-card flow that uploads images/audio and stores their public or signed URLs in `cards`.
+5. Change `js/editor.js` to insert card metadata and uploaded media URLs into Supabase.
+6. Change `js/receiver.js` to fetch the card by `id` from Supabase instead of `localStorage`.
+7. Configure Row Level Security carefully. Do not expose the service-role key in browser JavaScript.
+8. Deploy this folder to a static host such as GitHub Pages, Cloudflare Pages, or Vercel.
 
-## 2. Publish to GitHub Pages
+## Free hosting
+You can deploy the static frontend on GitHub Pages or Cloudflare Pages free tiers. Supabase free tier may be used for initial testing; check current provider limits before launch.
 
-1. Create a repository, for example `heartcraft`.
-2. Upload the **contents** of this project folder to the repository root. Confirm `index.html`, `firestore.rules`, and `storage.rules` are visible at the root.
-3. Open repository **Settings → Pages**.
-4. Under **Build and deployment**, select **Deploy from a branch**.
-5. Select branch `main` and folder `/ (root)`, then Save.
-6. Wait for the Pages deployment to finish. The URL normally looks like `https://YOUR-USERNAME.github.io/heartcraft/`.
-7. Open the URL on your phone and test creating a card.
+## QR Code
+The project reserves `js/qr.js` and `js/share.js` for QR support. After the card has a permanent public URL, add a QR library (for example qrcodejs) and render a QR from that URL. To place the recipient photo in the QR center, generate the QR at high error correction and overlay a small rounded image; test scans on multiple phones. A QR cannot make a browser-local card available online by itself.
 
-## 3. Test checklist
+## Music and browser permissions
+Browsers block autoplay until the receiver taps. This project starts audio after the cake interaction. Only upload music you own or have permission to distribute.
 
-- Switch between English and Myanmar.
-- Open each of the eight card types and confirm the editor title matches.
-- Preview a card with no photos, then with photos.
-- Try selecting more than five photos; only the first five should be used.
-- Try an unsupported file type or a file over 9 MB; the page should show a validation message.
-- Publish a card with no media, then publish one with photos and music.
-- Open the share link in a different browser or phone.
-- Confirm the receiver sequence works: envelope, message, candle/music, gallery.
-- Confirm only the creator browser/account can edit the card.
-
-## 4. Important limitations and safety
-
-- This is a static GitHub Pages app; it has no private server-side code.
-- Anonymous sign-in is tied to the browser's persisted Firebase identity. Clearing browser data or switching browsers/devices may make creator editing unavailable. Add a permanent sign-in method before using this as a production service.
-- Published card documents and their media are publicly readable by design so recipients can open shared links. Do not upload private or sensitive photos or music unless you have permission.
-- Front-end checks limit selected media to 9 MB per file and five images. Storage rules enforce a 10 MB maximum and image/audio MIME types. Add quotas, moderation, abuse protection, expiry/deletion workflows and a privacy notice before public launch.
-- The Firebase Web API key is intended for client-side use. Restrict it where appropriate; security depends on Firebase Authentication and Security Rules. Never publish a service-account private key.
-- Mobile browsers generally require a user tap before playing audio. This project starts the uploaded music only after the recipient taps the candle button.
-- The code has been checked for JavaScript syntax and basic static consistency. Live Firebase behavior still needs to be tested after your own Firebase config and rules are deployed.
-
-## Troubleshooting
-
-- `auth/operation-not-allowed`: enable Anonymous sign-in.
-- `auth/unauthorized-domain`: add the exact `*.github.io` hostname to Firebase Authorized domains.
-- `permission-denied`: verify the current user is signed in and both Firestore/Storage rules are published.
-- Photo/music upload errors: verify the exact Storage bucket value and Storage rules.
-- Blank page: check the browser developer console for module import, config or Firebase errors.
+## Production readiness
+Before public launch, add authentication or an unguessable edit token, file-size/type validation, rate limiting, abuse reporting, privacy/deletion controls, and proper database/storage policies. This starter is not a finished secure production service.
