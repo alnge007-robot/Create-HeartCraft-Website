@@ -1,75 +1,66 @@
-# HeartCraft — Digital Surprise Studio (Starter)
+# HeartCraft — GitHub Pages + Firebase (English / Myanmar)
 
-A responsive bilingual (Myanmar / English) digital postcard website starter. It includes:
+A responsive greeting-card starter with an original design. This is an independently written starter and does not reuse HeartCraft's proprietary source code or artwork.
 
-- Home page with eight postcard templates
-- Burmese / English language toggle
-- Live card editor and preview
-- Up to five compressed photo uploads
-- Optional audio upload and an original generated demo melody
-- Color themes, emojis and floating animation effects
-- Recipient-facing envelope reveal page
-- QR code + share link generation
-- Local demo mode and optional Supabase cloud storage for cross-device sharing
+## Included
 
-## 1. Run the website locally
+- English / Myanmar language toggle
+- Eight card types: Birthday, Love Note, Thank You, Friendship, Miss You, Anniversary, Sorry, Any Occasion
+- Creator editor: recipient, sender, date, theme and message
+- Up to five photos and one music file
+- Receiver sequence: envelope → message → cake/candle + music → photo gallery
+- Firestore records, Firebase Storage uploads and shareable card URLs
+- Anonymous Firebase Authentication; editing is limited to the same anonymous account/browser
+- Firebase Security Rules for card ownership and media upload limits
 
-The easiest way is to open the folder in Visual Studio Code and run `index.html` with the Live Server extension. You can also use any static web server. Avoid opening it as a `file://` URL when testing share links.
+## 1. Create Firebase project
 
-In demo mode, cards are stored in the current browser's `localStorage`. This means a demo QR/link only works in the same browser profile and device. It is not a public share link.
+1. Open https://console.firebase.google.com/ and create a project.
+2. In **Project settings → General → Your apps**, add a **Web app** and copy its config.
+3. In **Build → Authentication → Sign-in method**, enable **Anonymous**.
+4. In **Build → Firestore Database**, create a database.
+5. In **Build → Storage**, create the default Storage bucket.
+6. Open `index.html` and replace the placeholder values in `firebaseConfig` with the exact Web App config values. Use the exact `storageBucket` value shown by Firebase; newer projects may use a `*.firebasestorage.app` domain.
+7. In Firestore → Rules, paste `firestore.rules` and click **Publish**.
+8. In Storage → Rules, paste `storage.rules` and click **Publish**.
+9. In Authentication → Settings → Authorized domains, add the GitHub Pages hostname, e.g. `YOUR-USERNAME.github.io`. Add `localhost` only if testing locally.
 
-## 2. Enable real share links and QR codes (Supabase)
+## 2. Publish to GitHub Pages
 
-The starter uses Supabase so a recipient can open a card from a different phone. Create a Supabase project, then:
+1. Create a repository, for example `heartcraft`.
+2. Upload the **contents** of this project folder to the repository root. Confirm `index.html`, `firestore.rules`, and `storage.rules` are visible at the root.
+3. Open repository **Settings → Pages**.
+4. Under **Build and deployment**, select **Deploy from a branch**.
+5. Select branch `main` and folder `/ (root)`, then Save.
+6. Wait for the Pages deployment to finish. The URL normally looks like `https://YOUR-USERNAME.github.io/heartcraft/`.
+7. Open the URL on your phone and test creating a card.
 
-1. Open **Project Settings → API** and copy the Project URL and public `anon` key.
-2. Open **SQL Editor** and run the SQL below.
-3. In `index.html`, set `SUPABASE_URL` and `SUPABASE_ANON_KEY` to your own values. Use only the public anon key. Never put a `service_role` key in browser code.
-4. Host the website on an HTTPS static host. Then publish a card and scan the QR from another device.
+## 3. Test checklist
 
-### SQL setup
+- Switch between English and Myanmar.
+- Open each of the eight card types and confirm the editor title matches.
+- Preview a card with no photos, then with photos.
+- Try selecting more than five photos; only the first five should be used.
+- Try an unsupported file type or a file over 9 MB; the page should show a validation message.
+- Publish a card with no media, then publish one with photos and music.
+- Open the share link in a different browser or phone.
+- Confirm the receiver sequence works: envelope, message, candle/music, gallery.
+- Confirm only the creator browser/account can edit the card.
 
-```sql
-create table if not exists public.cards (
-  id uuid primary key default gen_random_uuid(),
-  payload jsonb not null,
-  created_at timestamptz not null default now()
-);
+## 4. Important limitations and safety
 
-alter table public.cards enable row level security;
+- This is a static GitHub Pages app; it has no private server-side code.
+- Anonymous sign-in is tied to the browser's persisted Firebase identity. Clearing browser data or switching browsers/devices may make creator editing unavailable. Add a permanent sign-in method before using this as a production service.
+- Published card documents and their media are publicly readable by design so recipients can open shared links. Do not upload private or sensitive photos or music unless you have permission.
+- Front-end checks limit selected media to 9 MB per file and five images. Storage rules enforce a 10 MB maximum and image/audio MIME types. Add quotas, moderation, abuse protection, expiry/deletion workflows and a privacy notice before public launch.
+- The Firebase Web API key is intended for client-side use. Restrict it where appropriate; security depends on Firebase Authentication and Security Rules. Never publish a service-account private key.
+- Mobile browsers generally require a user tap before playing audio. This project starts the uploaded music only after the recipient taps the candle button.
+- The code has been checked for JavaScript syntax and basic static consistency. Live Firebase behavior still needs to be tested after your own Firebase config and rules are deployed.
 
-create policy "public can create cards"
-on public.cards for insert to anon
-with check (true);
+## Troubleshooting
 
-create policy "public can read cards"
-on public.cards for select to anon
-using (true);
-
-insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values (
-  'heartcraft-media',
-  'heartcraft-media',
-  true,
-  8388608,
-  array['image/jpeg','audio/mpeg','audio/mp4','audio/ogg','audio/wav','audio/webm']
-)
-on conflict (id) do nothing;
-
-create policy "public can upload HeartCraft media"
-on storage.objects for insert to anon
-with check (bucket_id = 'heartcraft-media');
-```
-
-The bucket is public so published card images/audio can be loaded by the recipient. The browser app uploads only media selected by the card creator.
-
-## 3. Important production notes
-
-This is an MVP starter, not a fully hardened public service. The demo mode is local-only. The no-login Supabase policies above allow anonymous card creation and public reading; before launching to a large audience, add rate limiting, spam protection, moderation/reporting, retention/deletion rules, upload limits and an admin process. Avoid putting sensitive personal information in public cards. Never put passwords, private API keys or Supabase service-role keys in `index.html`.
-
-The website uses Google Fonts, QRCode.js and Supabase JS from CDNs, so those resources need internet access. Browsers require a user tap before playing audio; recipient music therefore uses a visible player rather than autoplay.
-
-## 4. Main files
-
-- `index.html` — complete front-end app
-- `README.md` — setup guide and Supabase SQL
+- `auth/operation-not-allowed`: enable Anonymous sign-in.
+- `auth/unauthorized-domain`: add the exact `*.github.io` hostname to Firebase Authorized domains.
+- `permission-denied`: verify the current user is signed in and both Firestore/Storage rules are published.
+- Photo/music upload errors: verify the exact Storage bucket value and Storage rules.
+- Blank page: check the browser developer console for module import, config or Firebase errors.
