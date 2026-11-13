@@ -1,0 +1,562 @@
+
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HeartCraft ❤️</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,"Noto Sans Myanmar",sans-serif;
+ background:linear-gradient(135deg,#fff0f6,#ffe0eb);
+ color:#641b3b;
+}
+header{
+ background:white;padding:20px;
+ text-align:center;
+ box-shadow:0 3px 10px #0001;
+}
+header h1{color:#e91e63;margin:0}
+.container{max-width:850px;margin:auto;padding:20px}
+.panel{
+ background:white;padding:22px;
+ border-radius:18px;
+ margin-bottom:20px;
+ box-shadow:0 5px 20px #0001;
+}
+h2{text-align:center;color:#e91e63}
+label{display:block;font-weight:bold;margin:15px 0 7px}
+input,textarea{
+ width:100%;padding:12px;
+ border:1px solid #f3b6cb;
+ border-radius:10px;font-size:15px;
+}
+textarea{height:110px;resize:vertical}
+button{cursor:pointer}
+.types{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:8px;
+}
+.type{
+ padding:12px 5px;
+ border:1px solid #f5b5ca;
+ border-radius:10px;
+ background:#fff0f5;color:#a31550;
+}
+.type.active{background:#f8bbd0;border:2px solid #e91e63}
+.emojis{display:flex;flex-wrap:wrap;gap:7px}
+.emojis button{
+ padding:8px;font-size:22px;
+ border:1px solid #f5b5ca;
+ border-radius:9px;background:#fff0f5;
+}
+.emojis button.selected{background:#f8bbd0}
+.photos{
+ display:grid;grid-template-columns:repeat(5,1fr);
+ gap:7px;margin-top:10px;
+}
+.photos img{
+ width:100%;aspect-ratio:1;
+ object-fit:cover;border-radius:9px;
+}
+.primary{
+ width:100%;padding:15px;
+ background:#e91e63;color:white;
+ border:0;border-radius:12px;
+ font-size:17px;font-weight:bold;
+ margin-top:20px;
+}
+.preview{
+ text-align:center;padding:22px;
+ border:2px solid #f8bbd0;
+ border-radius:15px;
+ background:linear-gradient(135deg,#fff0f5,#fff);
+ overflow-wrap:anywhere;
+}
+.preview h3{color:#e91e63;font-size:25px}
+.preview p{white-space:pre-wrap;line-height:1.8}
+.preview img{
+ width:100%;max-height:130px;
+ object-fit:cover;border-radius:10px;
+}
+#previewPhotos{
+ display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
+}
+#qrcode{
+ display:flex;justify-content:center;
+ margin:20px auto;min-height:150px;
+}
+#qrcode img,#qrcode canvas{max-width:100%;height:auto}
+.actions{text-align:center}
+.actions button{
+ padding:12px;margin:5px;
+ border:0;border-radius:10px;
+ background:#f8bbd0;color:#641b3b;
+}
+.note{font-size:12px;line-height:1.7;color:#866b7b}
+footer{text-align:center;padding:20px}
+@media(max-width:500px){
+ .types{grid-template-columns:repeat(2,1fr)}
+ .container{padding:12px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>💗 HeartCraft</h1>
+<p>Create Your Special Memories</p>
+<button onclick="toggleLanguage()" id="langBtn">English</button>
+</header>
+
+<div class="container">
+
+<div class="panel">
+
+<h2 id="heading">💌 အမှတ်တရ Card ဖန်တီးပါ</h2>
+
+<label id="typeLabel">Card အမျိုးအစား</label>
+
+<div class="types">
+<button class="type active" data-type="Love">💖 Love</button>
+<button class="type" data-type="Birthday">🎂 Birthday</button>
+<button class="type" data-type="Sorry">🥺 Sorry</button>
+<button class="type" data-type="Proposal">💍 Proposal</button>
+<button class="type" data-type="Anniversary">🌹 Anniversary</button>
+<button class="type" data-type="Miss You">🫶 Miss You</button>
+<button class="type" data-type="Thank You">💐 Thank You</button>
+<button class="type" data-type="Friendship">👯 Friendship</button>
+<button class="type" data-type="Surprise">🎁 Surprise</button>
+</div>
+
+<label id="fromLabel">ပေးပို့သူအမည်</label>
+<input id="from" maxlength="60" placeholder="Your Name">
+
+<label id="toLabel">လက်ခံသူအမည်</label>
+<input id="to" maxlength="60" placeholder="Special Person">
+
+<label id="titleLabel">ခေါင်းစဉ်</label>
+<input id="title" maxlength="100" placeholder="I Love You ❤️">
+
+<label id="messageLabel">စာသားရေးရန်</label>
+<textarea id="message" maxlength="1500"
+placeholder="Write your message..."></textarea>
+
+<label id="photoLabel">📸 ဓာတ်ပုံ ၅ ပုံအထိ</label>
+<input type="file" id="photos" accept="image/*" multiple>
+
+<div class="photos" id="photoGrid"></div>
+
+<label id="emojiLabel">🥰 Choose Emojis</label>
+
+<div class="emojis" id="emojiList">
+<button type="button">❤️</button>
+<button type="button">💖</button>
+<button type="button">😍</button>
+<button type="button">🥰</button>
+<button type="button">😘</button>
+<button type="button">💕</button>
+<button type="button">🫶</button>
+<button type="button">💋</button>
+<button type="button">🌹</button>
+<button type="button">✨</button>
+<button type="button">🦋</button>
+<button type="button">🎀</button>
+<button type="button">💌</button>
+<button type="button">🥹</button>
+<button type="button">🤍</button>
+<button type="button">🎂</button>
+<button type="button">🎉</button>
+<button type="button">🌈</button>
+</div>
+
+<button class="primary" id="createBtn">
+💝 Create My Card
+</button>
+
+<p class="note" id="privacy">
+ဓာတ်ပုံများကို လက်ရှိ Browser တွင်သာ Preview ပြသပါသည်။
+ဓာတ်ပုံများကို အခြားဖုန်းမှပါ ကြည့်နိုင်ရန် Online Storage ချိတ်ဆက်ရန် လိုအပ်ပါသည်။
+</p>
+
+</div>
+
+<div class="panel">
+
+<h2 id="previewHeading">💌 Card Preview</h2>
+
+<div class="preview">
+
+<div id="pType">LOVE CARD</div>
+
+<h3 id="pTitle">I Love You ❤️</h3>
+
+<p id="pTo">To: Someone Special</p>
+
+<p id="pMessage">Your beautiful message 💗</p>
+
+<div id="previewPhotos"></div>
+
+<h3 id="pEmoji">💖 🥰 ✨</h3>
+
+<p id="pFrom">With Love ❤️</p>
+
+</div>
+
+</div>
+
+<div class="panel">
+
+<h2 id="qrHeading">🔳 QR Code</h2>
+
+<div id="qrcode">
+<p class="note">Create your card first.</p>
+</div>
+
+<div class="actions">
+<button id="copyBtn">🔗 Copy Link</button>
+<button id="downloadBtn">⬇ Download QR</button>
+</div>
+
+<p class="note" id="qrNote">
+QR Code သည် စာသားပါဝင်သော Card Link ကို ဖွင့်ပေးသည်။
+</p>
+
+</div>
+</div>
+
+<footer>Made with ❤️ HeartCraft</footer>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+
+let language = "my";
+let cardType = "Love";
+let selectedEmojis = ["💖","🥰","✨"];
+let photoUrls = [];
+let shareLink = "";
+
+const translations = {
+ my:{
+  heading:"💌 အမှတ်တရ Card ဖန်တီးပါ",
+  fromLabel:"ပေးပို့သူအမည်",
+  toLabel:"လက်ခံသူအမည်",
+  titleLabel:"ခေါင်းစဉ်",
+  messageLabel:"စာသားရေးရန်",
+  photoLabel:"📸 ဓာတ်ပုံ ၅ ပုံအထိ",
+  emojiLabel:"🥰 သင်နှစ်သက်သော Emoji",
+  createBtn:"💝 Card ဖန်တီးမယ်",
+  previewHeading:"💌 Card Preview",
+  qrHeading:"🔳 QR Code",
+  copyBtn:"🔗 Copy Link",
+  downloadBtn:"⬇ QR Download",
+  privacy:"ဓာတ်ပုံများကို လက်ရှိ Browser တွင်သာ Preview ပြသပါသည်။ ဓာတ်ပုံများကို အခြားဖုန်းမှပါ ကြည့်နိုင်ရန် Online Storage ချိတ်ဆက်ရန် လိုအပ်ပါသည်။",
+  qrNote:"QR Code သည် စာသားပါဝင်သော Card Link ကို ဖွင့်ပေးသည်။",
+  toPrefix:"သို့ - ",
+  fromPrefix:"မေတ္တာဖြင့် - "
+ },
+ en:{
+  heading:"💌 Create Your Memory Card",
+  fromLabel:"Your Name",
+  toLabel:"Recipient Name",
+  titleLabel:"Card Title",
+  messageLabel:"Your Message",
+  photoLabel:"📸 Upload up to 5 Photos",
+  emojiLabel:"🥰 Choose Your Emojis",
+  createBtn:"💝 Create My Card",
+  previewHeading:"💌 Card Preview",
+  qrHeading:"🔳 QR Code",
+  copyBtn:"🔗 Copy Link",
+  downloadBtn:"⬇ Download QR",
+  privacy:"Photos are previewed only in this browser. Online photo storage is required to share photos with other devices.",
+  qrNote:"The QR code opens a link containing your card text.",
+  toPrefix:"To: ",
+  fromPrefix:"With love, "
+ }
+};
+
+function updatePreview(){
+
+ const t = translations[language];
+
+ $("pType").textContent = cardType.toUpperCase()+" CARD";
+
+ $("pTitle").textContent =
+ $("title").value.trim() || "I Love You ❤️";
+
+ $("pTo").textContent =
+ t.toPrefix + ($("to").value.trim() || "Someone Special");
+
+ $("pMessage").textContent =
+ $("message").value.trim() || "💗";
+
+ $("pFrom").textContent =
+ t.fromPrefix + ($("from").value.trim() || "You");
+
+ $("pEmoji").textContent = selectedEmojis.join(" ");
+
+ const grid = $("previewPhotos");
+ grid.replaceChildren();
+
+ photoUrls.forEach(url=>{
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = "Memory Photo";
+  grid.appendChild(img);
+ });
+}
+
+document.querySelectorAll(".type").forEach(button=>{
+
+ button.addEventListener("click",()=>{
+
+  cardType = button.dataset.type;
+
+  document.querySelectorAll(".type").forEach(b=>{
+   b.classList.toggle("active",b===button);
+  });
+
+  updatePreview();
+
+ });
+
+});
+
+["from","to","title","message"].forEach(id=>{
+ $(id).addEventListener("input",updatePreview);
+});
+
+$("emojiList").addEventListener("click",event=>{
+
+ const button = event.target.closest("button");
+ if(!button) return;
+
+ const emoji = button.textContent.trim();
+ const index = selectedEmojis.indexOf(emoji);
+
+ if(index >= 0){
+  selectedEmojis.splice(index,1);
+  button.classList.remove("selected");
+ }else if(selectedEmojis.length < 10){
+  selectedEmojis.push(emoji);
+  button.classList.add("selected");
+ }
+
+ updatePreview();
+
+});
+
+$("photos").addEventListener("change",event=>{
+
+ const files = Array.from(event.target.files || []);
+
+ if(files.length > 5){
+  alert("ဓာတ်ပုံ ၅ ပုံအထိသာ ရွေးနိုင်ပါတယ်။");
+  event.target.value = "";
+  return;
+ }
+
+ if(files.some(file=>!file.type.startsWith("image/"))){
+  alert("ဓာတ်ပုံဖိုင်များကိုသာ ရွေးချယ်ပါ။");
+  event.target.value = "";
+  return;
+ }
+
+ photoUrls.forEach(url=>URL.revokeObjectURL(url));
+
+ photoUrls = files.map(file=>URL.createObjectURL(file));
+
+ const grid = $("photoGrid");
+ grid.replaceChildren();
+
+ photoUrls.forEach(url=>{
+  const img = document.createElement("img");
+  img.src = url;
+  img.alt = "Selected Photo";
+  grid.appendChild(img);
+ });
+
+ updatePreview();
+
+});
+
+function encodeData(data){
+
+ const bytes = new TextEncoder().encode(JSON.stringify(data));
+
+ let binary = "";
+
+ bytes.forEach(byte=>{
+  binary += String.fromCharCode(byte);
+ });
+
+ return btoa(binary)
+  .replace(/\+/g,"-")
+  .replace(/\//g,"_")
+  .replace(/=+$/g,"");
+
+}
+
+function createCard(){
+
+ updatePreview();
+
+ const data = {
+  type:cardType,
+  from:$("from").value.trim(),
+  to:$("to").value.trim(),
+  title:$("title").value.trim(),
+  message:$("message").value.trim(),
+  emojis:selectedEmojis
+ };
+
+ const encoded = encodeData(data);
+
+ shareLink = location.href.split("#")[0] + "#card=" + encoded;
+
+ $("qrcode").replaceChildren();
+
+ if(typeof QRCode === "undefined"){
+  $("qrcode").textContent =
+  "QR Library မရရှိပါ။ Internet Connection စစ်ဆေးပါ။";
+  return;
+ }
+
+ new QRCode($("qrcode"),{
+  text:shareLink,
+  width:180,
+  height:180,
+  colorDark:"#831843",
+  colorLight:"#ffffff",
+  correctLevel:QRCode.CorrectLevel.L
+ });
+
+}
+
+async function copyLink(){
+
+ if(!shareLink){
+  alert("အရင်ဆုံး Card ဖန်တီးပါ။");
+  return;
+ }
+
+ try{
+  await navigator.clipboard.writeText(shareLink);
+  alert("Link Copy လုပ်ပြီးပါပြီ ❤️");
+ }catch(error){
+  window.prompt("Copy your link:",shareLink);
+ }
+
+}
+
+function downloadQR(){
+
+ const image = $("qrcode").querySelector("img");
+ const canvas = $("qrcode").querySelector("canvas");
+
+ if(!image && !canvas){
+  alert("အရင်ဆုံး QR Code ဖန်တီးပါ။");
+  return;
+ }
+
+ const link = document.createElement("a");
+
+ link.href = image ? image.src : canvas.toDataURL("image/png");
+ link.download = "HeartCraft-QR.png";
+
+ document.body.appendChild(link);
+ link.click();
+ link.remove();
+
+}
+
+function toggleLanguage(){
+
+ language = language === "my" ? "en" : "my";
+
+ const t = translations[language];
+
+ Object.keys(t).forEach(key=>{
+  if($(key)){
+   $(key).textContent = t[key];
+  }
+ });
+
+ $("langBtn").textContent =
+ language === "my" ? "English" : "မြန်မာ";
+
+ document.documentElement.lang = language;
+
+ updatePreview();
+
+}
+
+function loadSharedCard(){
+
+ const match = location.hash.match(/^#card=([A-Za-z0-9_-]+)$/);
+
+ if(!match) return;
+
+ try{
+
+  let encoded = match[1].replace(/-/g,"+").replace(/_/g,"/");
+
+  while(encoded.length % 4){
+   encoded += "=";
+  }
+
+  const binary = atob(encoded);
+
+  const bytes = Uint8Array.from(binary,c=>c.charCodeAt(0));
+
+  const data = JSON.parse(new TextDecoder().decode(bytes));
+
+  cardType = typeof data.type === "string" ? data.type : "Love";
+
+  $("from").value = data.from || "";
+  $("to").value = data.to || "";
+  $("title").value = data.title || "";
+  $("message").value = data.message || "";
+
+  selectedEmojis = Array.isArray(data.emojis)
+   ? data.emojis.filter(e=>typeof e==="string").slice(0,10)
+   : [];
+
+  document.querySelectorAll(".type").forEach(button=>{
+   button.classList.toggle("active",button.dataset.type===cardType);
+  });
+
+  document.querySelectorAll("#emojiList button").forEach(button=>{
+   button.classList.toggle(
+    "selected",
+    selectedEmojis.includes(button.textContent.trim())
+   );
+  });
+
+  updatePreview();
+
+ }catch(error){
+  console.error("Unable to load card:",error);
+ }
+
+}
+
+$("createBtn").addEventListener("click",createCard);
+$("copyBtn").addEventListener("click",copyLink);
+$("downloadBtn").addEventListener("click",downloadQR);
+
+loadSharedCard();
+updatePreview();
+
+</script>
+</body>
+</html>
