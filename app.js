@@ -48,4 +48,29 @@ function playBirthdayTune(){try{const ctx=new (window.AudioContext||window.webki
 $('#startTop').onclick=()=>startBuilder();$('#startHero').onclick=()=>startBuilder();$('#backHome').onclick=()=>showView('homeView');$('#editAgain').onclick=()=>showView('builderView');$('#categoryGrid').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b)startBuilder(b.dataset.type);});$('#typeSelect').addEventListener('click',e=>{const b=e.target.closest('[data-type]');if(b)chooseType(b.dataset.type);});$('#emojiPicker').addEventListener('click',e=>{const b=e.target.closest('[data-emoji]');if(!b)return;const em=b.dataset.emoji;state.selectedEmojis=state.selectedEmojis.includes(em)?state.selectedEmojis.filter(x=>x!==em):[...state.selectedEmojis,em];renderEmoji();});
 ['recipient','greeting'].forEach(id=>$('#'+id).addEventListener('input',updatePreview));$('#photos').addEventListener('change',async e=>{const files=[...e.target.files];if(files.length>5){toast('Please select no more than 5 photos.');e.target.value='';return;}for(const f of files){if(f.size>5*1024*1024){toast('Each photo must be smaller than 5 MB.');e.target.value='';return;}if(!/^image\/(jpeg|png|webp)$/.test(f.type)){toast('Please use JPG, PNG or WEBP photos.');e.target.value='';return;}}state.photos=[];for(const file of files)state.photos.push({file,data:await fileToData(file)});$('#photoList').innerHTML=state.photos.map(p=>`<img class="photo-thumb" src="${p.data}" alt="Selected photo">`).join('');$('#previewPhotos').innerHTML=state.photos.slice(0,4).map(p=>`<img src="${p.data}" alt="Photo preview">`).join('');});$('#music').addEventListener('change',e=>{const f=e.target.files[0];if(f&&f.size>10*1024*1024){toast('Audio file must be smaller than 10 MB.');e.target.value='';return;}state.music=f||null;$('#musicName').textContent=f?`${f.name} (${(f.size/1024/1024).toFixed(1)} MB)`:'No song selected';});$('#cardForm').addEventListener('submit',createCard);$('#copyLink').onclick=async()=>{try{await navigator.clipboard.writeText($('#shareUrl').value);toast('Link copied!');}catch(e){$('#shareUrl').select();document.execCommand('copy');toast('Link copied!');}};$('#nativeShare').onclick=async()=>{const url=$('#shareUrl').value;if(navigator.share){try{await navigator.share({title:'A surprise for you',text:'I made a little surprise for you 💖',url});}catch(e){}}else{await navigator.clipboard.writeText(url);toast('Link copied. You can paste it into a chat.');}};$('#openCard').onclick=()=>window.open($('#shareUrl').value,'_blank','noopener');$('#downloadQr').onclick=downloadQR;
 $('#year').textContent=new Date().getFullYear();renderCategories();renderEmoji();getCardFromLink();
+// Photo Zoom Feature
+document.addEventListener("click", function(e) {
+  const photo = e.target.closest("#receiverStage img");
+  if (!photo) return;
+
+  const viewer = document.createElement("div");
+  viewer.className = "photo-zoom-viewer";
+
+  const close = document.createElement("button");
+  close.className = "photo-zoom-close";
+  close.textContent = "×";
+
+  const image = document.createElement("img");
+  image.src = photo.src;
+
+  close.onclick = () => viewer.remove();
+
+  viewer.onclick = (event) => {
+    if (event.target === viewer) viewer.remove();
+  };
+
+  viewer.appendChild(image);
+  viewer.appendChild(close);
+  document.body.appendChild(viewer);
+}); 
 })();
